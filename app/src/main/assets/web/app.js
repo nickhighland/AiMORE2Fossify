@@ -326,7 +326,7 @@
       return;
     }
     if (weather.error) {
-      widget.innerHTML = `<div class="weather-error"><strong>${escapeHtml(weather.label || "Weather")}</strong>${escapeHtml(weather.error)}<div class="weather-footer"><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weather by Open-Meteo</a> · CAMS ENSEMBLE air quality</div></div>`;
+      widget.innerHTML = `<div class="weather-error"><strong>${escapeHtml(weather.label || "Weather")}</strong>${escapeHtml(weather.error)}<div class="weather-footer"><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weather by Open-Meteo</a> · <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noreferrer">Copernicus CAMS ENSEMBLE air quality</a></div></div>`;
       return;
     }
     const current = weather.current || {};
@@ -350,7 +350,7 @@
         <div class="weather-row"><span class="weather-row-icon">≋</span><span class="weather-row-label">Wind</span><span class="weather-row-value">${escapeHtml(current.windDirection || "—")} ${weatherNumber(current.windSpeed, " mph")}</span></div>
       </div>
       <div class="weather-forecast">${forecast.map((day) => `<div class="weather-day"><div class="weather-day-name">${escapeHtml(day.date || "—")}</div><div class="weather-day-icon" aria-hidden="true">${weatherGlyph(day.weatherCode)}</div><div class="weather-day-high">${weatherNumber(day.high)}</div><div class="weather-day-low">${weatherNumber(day.low)}</div><div class="weather-day-rain">💧 ${weatherNumber(day.precipitation, "%")}</div></div>`).join("")}</div>
-      <div class="weather-footer"><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weather by Open-Meteo</a> · CAMS ENSEMBLE air quality</div>`;
+      <div class="weather-footer"><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Weather by Open-Meteo</a> · <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noreferrer">Copernicus CAMS ENSEMBLE air quality</a></div>`;
   }
 
   function openNewEvent(date = state.date) {
