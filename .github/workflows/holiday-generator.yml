@@ -1,0 +1,79 @@
+name: Generate holiday ICS files
+
+on:
+  schedule:
+    # Run every year on 1st December, midnight
+    - cron: "0 0 1 12 *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/holiday-generator/package-lock.json"
+      - ".github/workflows/holiday-generator/config.js"
+
+jobs:
+  generate:
+    name: Generate ICS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Install NodeJS
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 20
+      - name: Run script
+        env:
+          LOG_ENABLED: true
+        working-directory: ./.github/workflows/holiday-generator
+        run: "npm install && npm start"
+
+      - name: Install keep-a-changelog parser
+        run: npm install keep-a-changelog@2.6.2
+
+      - name: Update changelog
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const { parser } = require('keep-a-changelog');
+            const changelogPath = path.join(process.env.GITHUB_WORKSPACE, 'CHANGELOG.md');
+
+            const changelogContent = fs.readFileSync(changelogPath, 'utf8');
+            const parsed = parser(changelogContent);
+
+            const unreleased = parsed.findRelease();
+            if (!unreleased) {
+              throw new Error('No [Unreleased] section found in CHANGELOG.md');
+            }
+
+            const changedEntries = unreleased.changes.get('changed') || [];
+            if (!changedEntries.some(entry => entry.toString().includes('Updated holiday data'))) {
+              unreleased.changed('Updated holiday data');
+              fs.writeFileSync(changelogPath, parsed.toString(), 'utf8');
+              console.log('Added "Updated holiday data" to [Unreleased] section');
+            } else {
+              console.log('"Updated holiday data" already present in [Unreleased] section');
+            }
+
+      - name: Normalize changelog
+        run: npx keep-a-changelog --file="CHANGELOG.md" --no-v-prefix
+
+      - id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          sign-commits: true
+          add-paths: |
+            app/src/main/assets/holidays/**
+            CHANGELOG.md
+          branch: fossifybot/holidays
+          commit-message: "chore: update holidays"
+          title: "chore: update holidays"
+          body: " "

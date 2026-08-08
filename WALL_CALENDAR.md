@@ -1,0 +1,29 @@
+# AiMORE2Fossify wall calendar
+
+This checkout is a customized Fossify Calendar for AiMOR digital calendars with an embedded, local-only wall interface, a weather widget, and a LAN web interface for managing calendars from a phone or computer. See [AIMORE_SETUP.md](AIMORE_SETUP.md) for enabling ADB and running the cross-platform installer.
+
+## Build and install
+
+```sh
+./gradlew clean :app:assembleFossDebug
+adb -s <serial> install -r app/build/outputs/apk/foss/debug/calendar-21-foss-debug.apk
+```
+
+The development package is `org.fossify.calendar.debug`. A signed release uses `org.fossify.calendar`; configure a production keystore before distributing it. The setup tool can install a supplied signed release APK.
+
+`app/build/outputs/apk/foss/debug/calendar-21-foss-debug.apk`
+
+## Use
+
+- Wall mode is the default launch surface and stays awake/fullscreen. Its web Settings menu supports exiting to the native calendar, the start-in-wall toggle, automatic/day/night themes, adaptive or fixed brightness, portrait/landscape/sensor orientation, and Today-or-Sunday week starts (Today is the default).
+- The same UI is available from another device at `http://192.168.4.80:8080` while the calendar app process is running.
+- Settings → Wall calendar contains the start-in-wall toggle, port, LAN address/copy action, and Return to wall view.
+- The web UI supports month, month + day split, week, and agenda views; 15-second polling; local calendar visibility/color/name management; calendar color pickers; an option to hide the built-in Local calendar from the sidebar; calendar deletion with confirmation (including its events/tasks); and event create/edit/delete. Event bars use their calendar's color in every view.
+- The LAN page includes a web-app manifest, standalone mobile metadata, a custom calendar icon, and a shell service worker for adding it to an Android or iOS phone homescreen. A true OS home-screen widget is platform-specific and is not the same as this installable web app.
+- On portrait displays and phone-sized web views, the weather card is hidden so the calendar and calendar list remain usable. On the wall display in landscape, it stays pinned to the bottom of the right-hand column and shows current conditions, high/low, precipitation, humidity, U.S. AQI, sunrise/sunset, wind, and a three-day forecast. If the calendar list grows beyond the available column height, it scrolls independently without moving or covering the weather card.
+- Add `.ics` files as editable local copies or read-only snapshots. Add HTTP(S) `.ics` feeds as one-way incoming calendars; they refresh at least every 15 minutes through WorkManager and can be synced immediately with the ↻ button. Read-only calendars are protected from edits/deletes in both the web API and the native helper.
+- The wall Settings menu accepts a ZIP code and manual location label for a weather card with current conditions, high/low, precipitation, humidity, U.S. AQI, sunrise/sunset, wind, and a three-day forecast. Weather is supplied by Open-Meteo and cached for 15 minutes.
+
+The web API uses Fossify’s existing Room `events.db`, `EventsDao`, `CalendarsDao`, and `EventsHelper`. No second database, cloud service, Play Services, OAuth, CDN, or external sync app is required. Existing Fossify recurrence expansion remains read-only in the first web CRUD slice; editing a repeated series is explicitly labeled in the UI.
+
+The initial LAN endpoint is intentionally unauthenticated and local-only. It binds to all device interfaces on port 8080 and does not advertise or tunnel itself; add a PIN before exposing it beyond a trusted LAN.

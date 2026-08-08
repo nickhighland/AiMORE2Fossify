@@ -1,0 +1,19 @@
+{
+  "name": "Wall Calendar",
+  "short_name": "Calendar",
+  "description": "A local, multi-calendar wall calendar.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d1118",
+  "theme_color": "#0d1118",
+  "icons": [
+    {
+      "src": "/icons/calendar.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
