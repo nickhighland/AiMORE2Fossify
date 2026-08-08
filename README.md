@@ -1,5 +1,7 @@
 # AiMORE2Fossify
 
+I was given an AiMOR Digital Calendar.  It was a great concept with poor execution.  It was buggy, didn't sync all calendar entries, and functioned poorly overall. So I disabled the AiMOR pre-installed calendar and built this based of Fossify Calendar.  
+
 AiMORE2Fossify is a customized Fossify Calendar build for AiMOR Android digital calendars. It boots into a full-screen wall calendar and adds:
 
 - A local LAN web interface on port 8080 for managing the calendar from a phone or computer.
