@@ -2,5 +2,6 @@
 <paths>
     <external-path name="external_files" path="."/>
     <cache-path name="shared_events" path="events/"/>
+    <cache-path name="updates" path="updates/"/>
     <root-path name="external_files" path="/storage/" />
 </paths>

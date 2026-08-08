@@ -68,6 +68,7 @@ import org.fossify.calendar.helpers.WEEKLY_VIEW
 import org.fossify.calendar.helpers.WEEK_NUMBERS
 import org.fossify.calendar.helpers.YEARLY_VIEW
 import org.fossify.calendar.models.CalendarEntity
+import org.fossify.calendar.updates.UpdateManager
 import org.fossify.calendar.web.WebCalendarService
 import org.fossify.commons.dialogs.ColorPickerDialog
 import org.fossify.commons.dialogs.ConfirmationDialog
@@ -186,6 +187,7 @@ class SettingsActivity : SimpleActivity() {
         setupManageCalendars()
         setupManageQuickFilterCalendars()
         setupWallCalendar()
+        setupCheckForUpdates()
         setupHourFormat()
         setupAllowCreatingTasks()
         setupStartWeekOn()
@@ -231,6 +233,10 @@ class SettingsActivity : SimpleActivity() {
         setupImportEvents()
         setupExportSettings()
         setupImportSettings()
+
+        UpdateManager.takePendingUpdate(this)?.let { update ->
+            window.decorView.post { UpdateManager.showInstallDialog(this, update) }
+        }
 
         arrayOf(
             binding.settingsColorCustomizationSectionLabel,
@@ -369,6 +375,20 @@ class SettingsActivity : SimpleActivity() {
             val clipboard = getSystemService(android.content.ClipboardManager::class.java)
             clipboard?.setPrimaryClip(android.content.ClipData.newPlainText("Wall calendar address", address))
             Toast.makeText(this@SettingsActivity, address, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupCheckForUpdates() = binding.apply {
+        settingsCheckUpdatesHolder.setOnClickListener {
+            settingsCheckUpdatesHolder.isEnabled = false
+            UpdateManager.checkNow(this@SettingsActivity) { update, error ->
+                settingsCheckUpdatesHolder.isEnabled = true
+                when {
+                    update != null -> UpdateManager.showInstallDialog(this@SettingsActivity, update)
+                    error != null -> toast(R.string.update_check_failed)
+                    else -> toast(R.string.no_updates_available)
+                }
+            }
         }
     }
 

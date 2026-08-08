@@ -66,6 +66,8 @@ The setup tool discovers ADB from `PATH` or common Android SDK locations, waits 
 
 For a local development build, pass `--build-type debug`; a production/release APK must be signed before Android will install it. The tool never deletes calendar data or uninstalls the factory package; it disables it for the primary Android user.
 
+The installed app checks the repository's latest GitHub Release once daily. If a newer APK is available, it posts a notification and asks for approval before downloading and installing it. **Settings → Check for updates** performs the same check immediately. Android may require allowing AiMORE2Fossify to install unknown apps. Because the device performs unauthenticated HTTPS requests, the update repository and release assets must be public; do not put private URLs, credentials, or calendar data in a release.
+
 ## LAN web interface
 
 Once the app is running, open the device's displayed LAN address, normally `http://<calendar-ip>:8080`, from a phone or computer on the same network. The service is intentionally local-only and unauthenticated; do not expose port 8080 outside a trusted LAN. Weather is hidden automatically in portrait mode and on phone-sized web views so the calendar list and calendar remain usable.

@@ -106,6 +106,14 @@ def allow_background_start(adb: str, serial: str, package: str) -> None:
         print("could not grant the Android background-start allowance; enable the app's Display over other apps permission if startup is blocked")
 
 
+def allow_update_install(adb: str, serial: str, package: str) -> None:
+    result = adb_call(adb, serial, ["shell", "cmd", "appops", "set", package, "REQUEST_INSTALL_PACKAGES", "allow"], check=False)
+    if result.returncode == 0:
+        print(f"allowed {package} to install downloaded updates")
+    else:
+        print("could not grant update-install permission; Android may ask for it before installing an update")
+
+
 def find_apk(explicit: str | None, build_type: str) -> Path:
     if explicit:
         path = Path(explicit).expanduser().resolve()
@@ -113,10 +121,11 @@ def find_apk(explicit: str | None, build_type: str) -> Path:
             fail(f"APK does not exist: {path}")
         return path
 
-    version = "21"
-    candidates = (
-        ROOT / f"app/build/outputs/apk/foss/{build_type}/calendar-{version}-foss-{build_type}.apk",
-        ROOT / f"app/build/outputs/apk/foss/{build_type}/calendar-{version}-foss-{build_type}-unsigned.apk",
+    output_dir = ROOT / f"app/build/outputs/apk/foss/{build_type}"
+    candidates = sorted(
+        output_dir.glob("calendar-*-foss-*.apk"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
     )
     for candidate in candidates:
         if candidate.is_file() and "unsigned" not in candidate.name:
@@ -213,6 +222,7 @@ def main() -> int:
         install(adb, serial, app_apk)
         package = "org.fossify.calendar.debug" if "debug" in app_apk.name.lower() else RELEASE_PACKAGE
         allow_background_start(adb, serial, package)
+        allow_update_install(adb, serial, package)
         adb_call(adb, serial, ["shell", "monkey", "-p", package, "1"], check=False)
         print(f"installed {app_apk}")
         print("The wall interface is available at http://<calendar-ip>:8080 while the app is running.")

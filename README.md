@@ -12,6 +12,7 @@ AiMORE2Fossify is a customized Fossify Calendar build for AiMOR Android digital 
 - A landscape weather card powered by Open-Meteo, with manual ZIP code and location label settings.
 - Weather hidden automatically in portrait mode and phone-sized web views.
 - KISS launcher integration and automatic wall-calendar startup after reboot.
+- Daily GitHub Releases update checks with a manual check in native Settings and an approval prompt before installation.
 
 This repository is the AiMOR device project, not the upstream Fossify Calendar application. Upstream Fossify code and assets are retained as the base; the AiMOR-specific setup and behavior are documented here.
 
@@ -38,7 +39,7 @@ Install Android SDK/platform-tools and use the included Gradle wrapper:
 The debug APK is created at:
 
 ~~~text
-app/build/outputs/apk/foss/debug/calendar-21-foss-debug.apk
+app/build/outputs/apk/foss/debug/calendar-22-foss-debug.apk
 ~~~
 
 For a release build:
@@ -64,6 +65,8 @@ Windows PowerShell:
 ~~~
 
 The installer discovers ADB, disables the factory com.efercro.calendar package and any old debug build, downloads and installs KISS, sets KISS as the Home app, installs AiMORE2Fossify, grants the startup permission required by this firmware, and launches the calendar. Use --serial with multiple devices, --kiss-apk for a local KISS APK, or --skip-kiss to omit launcher installation.
+
+The updater checks the repository's latest GitHub Release once per day. When a newer APK is found it posts a notification; opening it presents an install/ignore prompt. Native Settings also has **Check for updates** for an immediate check. The device must be able to access the repository and its release assets without credentials, so the repository must be public for unattended update checks.
 
 ## Use the wall calendar
 

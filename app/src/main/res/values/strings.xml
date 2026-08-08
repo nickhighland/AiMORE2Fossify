@@ -332,4 +332,16 @@
     <string name="wall_port">Port</string>
     <string name="wall_web_address">Web address</string>
     <string name="wall_open_mode">Return to wall view</string>
+    <string name="check_for_updates">Check for updates</string>
+    <string name="update_available">Update available</string>
+    <string name="update_available_version">AiMORE2Fossify %s is available</string>
+    <string name="update_available_message">A new AiMORE2Fossify version (%s) is available. Download and install it now?</string>
+    <string name="install_update">Install update</string>
+    <string name="not_now">Not now</string>
+    <string name="downloading_update">Downloading update…</string>
+    <string name="update_download_failed">The update could not be downloaded.</string>
+    <string name="update_install_permission">Allow AiMORE2Fossify to install updates, then try again.</string>
+    <string name="update_install_failed">No Android package installer is available.</string>
+    <string name="no_updates_available">You are using the latest version.</string>
+    <string name="update_check_failed">Could not check for updates.</string>
 </resources>
