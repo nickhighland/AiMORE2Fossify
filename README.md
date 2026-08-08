@@ -1,63 +1,88 @@
 # AiMORE2Fossify
-<img alt="Logo" src="graphics/icon.webp" width="120" />
 
-AiMORE2Fossify is a customized Fossify Calendar build for AiMOR digital calendars. It adds a full-screen wall calendar, a weather widget, and a local web interface that can be opened from a phone or computer on the same network to manage multiple calendars more easily.
+AiMORE2Fossify is a customized Fossify Calendar build for AiMOR Android digital calendars. It boots into a full-screen wall calendar and adds:
 
-See [AIMORE_SETUP.md](AIMORE_SETUP.md) for the AiMOR ADB/Developer Options workaround and the automated Windows, macOS, and Linux installer.
+- A local LAN web interface on port 8080 for managing the calendar from a phone or computer.
+- Multiple calendars with colors, deletion, visibility controls, editable local calendars, read-only imports, and one-way ICS feeds.
+- Automatic ICS refreshes at least every 15 minutes.
+- Month, month + day, week, and agenda views, including a selectable startup view.
+- Day/night/automatic display modes, adaptive brightness, orientation control, and Today-or-Sunday week starts.
+- A landscape weather card powered by Open-Meteo, with manual ZIP code and location label settings.
+- Weather hidden automatically in portrait mode and phone-sized web views.
+- KISS launcher integration and automatic wall-calendar startup after reboot.
 
-<a href='https://play.google.com/store/apps/details?id=org.fossify.calendar'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' height=80/></a> <a href="https://f-droid.org/packages/org.fossify.calendar/"><img src="https://fdroid.gitlab.io/artwork/badge/get-it-on-en.svg" alt="Get it on F-Droid" height=80/></a> <a href="https://apt.izzysoft.de/fdroid/index/apk/org.fossify.calendar"><img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height=80/></a>
+This repository is the AiMOR device project, not the upstream Fossify Calendar application. Upstream Fossify code and assets are retained as the base; the AiMOR-specific setup and behavior are documented here.
 
-Your Private & Powerful Schedule Planner
+## Start here
 
-Tired of cluttered calendars and privacy concerns?
+Read [AIMORE_SETUP.md](AIMORE_SETUP.md) for:
 
-Fossify Calendar is here to change that. Your open-source powerhouse for managing life, designed with privacy as its core and packed with powerful features to keep you organized.
+1. The keyboard-settings workaround for exposing Android Settings.
+2. Enabling Developer Options and USB/Wireless debugging.
+3. Running the Windows, macOS, or Linux setup tool.
+4. Disabling the factory AiMOR calendar.
+5. Installing KISS and AiMORE2Fossify.
 
-Here's what makes Fossify Calendar different:
+The setup tool does not root the device, unlock the bootloader, modify firmware, uninstall the factory package, or require Google Play Services.
 
-**🚫 AD-FREE AND PRIVATE:**  
-Your events remain yours. No ads, no tracking, no intrusive permissions.
+## Build
 
-**⏰ FLEXIBLE AND CUSTOMIZABLE:**  
-Craft events precisely with times, durations, reminders, and advanced repetition rules.
+Install Android SDK/platform-tools and use the included Gradle wrapper:
 
-**🔄 SEAMLESS SYNCING:**  
-Sync effortlessly with Google Calendar, Outlook, Nextcloud, Exchange, and more.
+~~~sh
+./gradlew :app:assembleFossDebug
+~~~
 
-**🎨 PERSONALIZE YOUR PLANNER:**  
-Set custom sounds, looping audio streams, vibrations, and themes to match your preferences.
+The debug APK is created at:
 
-**🌈 VIBRANT WIDGETS:**  
-Brighten your day with beautiful calendar widgets and themes for your home screen.
+~~~text
+app/build/outputs/apk/foss/debug/calendar-21-foss-debug.apk
+~~~
 
-**📅 EFFORTLESS DAY MANAGEMENT:**  
-Plan your day with ease, whether you're a busy professional or a family organizer.
+For a release build:
 
-**🎉 IMPORT CELEBRATIONS:**  
-Never miss a birthday or anniversary! Easily import holidays and special dates.
+~~~sh
+./gradlew :app:assembleFossRelease
+~~~
 
-**🔍 FILTER VIEWS:**  
-Quickly find what you're looking for with event filters.
+Gradle produces an unsigned release APK unless a production signing key is configured. Sign the release APK before installing it on a device or distributing it.
 
-**📆 MULTIPLE VIEWS:**  
-Switch between daily, weekly, monthly, yearly, and event views effortlessly.
+## Install automatically
 
-**✨ MATERIAL DESIGN ELEGANCE:**  
-Enjoy an intuitive and user-friendly interface with dynamic themes.
+After ADB is enabled and the calendar is connected and authorized:
 
-**Plus, Fossify Calendar is open-source!**
+~~~sh
+./scripts/setup-aimore.sh --apk /path/to/signed-calendar-release.apk
+~~~
 
-Join the vibrant community on GitHub, contribute to the project, and make it uniquely yours.
+Windows PowerShell:
 
-Download Fossify Calendar now and experience the power of a private and customizable schedule.
+~~~powershell
+.\scripts\setup-aimore.ps1 -Apk C:\path\to\signed-calendar-release.apk
+~~~
 
-➡️ Explore more Fossify apps: https://www.fossify.org<br>
-➡️ Open-Source Code: https://www.github.com/FossifyOrg<br>
-➡️ Join the community on Reddit: https://www.reddit.com/r/Fossify<br>
-➡️ Connect on Telegram: https://t.me/Fossify
+The installer discovers ADB, disables the factory com.efercro.calendar package and any old debug build, downloads and installs KISS, sets KISS as the Home app, installs AiMORE2Fossify, grants the startup permission required by this firmware, and launches the calendar. Use --serial with multiple devices, --kiss-apk for a local KISS APK, or --skip-kiss to omit launcher installation.
 
-<div align="center">
-<img alt="App image" src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" width="30%">
-<img alt="App image" src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" width="30%">
-<img alt="App image" src="fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US.png" width="30%">
-</div>
+## Use the wall calendar
+
+When the app starts, it opens Wall Calendar mode. Open the displayed LAN address from another device, for example:
+
+~~~text
+http://192.168.4.80:8080
+~~~
+
+The web Settings menu controls startup mode, default view, orientation, brightness, week start, Local-calendar visibility, weather ZIP code, and weather label. The right-hand sidebar keeps the weather card pinned to the bottom in landscape; a long calendar list scrolls without covering or moving it.
+
+ICS files can be imported as editable local copies or read-only snapshots. HTTP(S) ICS feeds are one-way incoming calendars and refresh at least every 15 minutes. Read-only calendars cannot be edited or deleted from the web interface.
+
+The LAN interface is intentionally unauthenticated and local-only. Do not forward port 8080 outside a trusted network.
+
+## Native Fossify calendar
+
+Wall Calendar mode has an **Exit wall mode** action that returns to the native Fossify calendar. The native calendar retains Fossify's event editing, recurrence, reminders, widgets, and other standard calendar features.
+
+## Project documents
+
+- [AiMOR ADB and automated setup instructions](AIMORE_SETUP.md)
+- [Wall-calendar feature and build notes](WALL_CALENDAR.md)
+- [Cross-platform installer](scripts/setup_aimore.py)
