@@ -104,6 +104,7 @@
         <label>Weather ZIP code<input id="weatherZip" maxlength="16" inputmode="numeric" placeholder="e.g. 14623"></label>
         <label>Weather location label<input id="weatherLabel" maxlength="120" placeholder="e.g. Home or Rochester, NY"></label>
       </div>
+      <p class="settings-footnote">Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Air quality: <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noreferrer">Copernicus CAMS ENSEMBLE</a>.</p>
       <div id="settingsError" class="form-error" role="alert"></div>
       <div class="dialog-actions"><button type="button" id="exitWallMode" class="secondary">Exit wall mode</button><span class="grow"></span><button type="button" id="cancelSettings" class="secondary">Close</button><button type="button" id="saveSettings" class="primary">Save settings</button></div>
     </form>
@@ -122,7 +123,6 @@
         <label>ICS file<input id="sourceFile" type="file" accept=".ics,text/calendar,text/plain"></label>
         <label>ICS feed URL (optional)<input id="sourceUrl" type="url" placeholder="https://example.org/calendar.ics"></label>
         <label>Permission<select id="sourceMode"><option value="editable">Editable local copy</option><option value="readonly">Read-only snapshot</option><option value="one_way">One-way incoming sync</option></select></label>
-        <p class="source-help weather-attribution">Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Air quality: <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noreferrer">Copernicus CAMS ENSEMBLE</a>.</p>
         <div id="calendarError" class="form-error" role="alert"></div>
       </div>
       <div class="dialog-actions"><span class="grow"></span><button type="button" id="cancelCalendar" class="secondary">Cancel</button><button type="button" id="doImport" class="primary">Add calendar</button></div>

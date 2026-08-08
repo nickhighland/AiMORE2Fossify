@@ -98,7 +98,7 @@ class WallCalendarActivity : SimpleActivity() {
 
     private fun loadWall() {
         if (!hasLoadedWall) {
-            webView.loadUrl("http://127.0.0.1:${WebCalendarService.PORT}/")
+            webView.loadUrl("http://127.0.0.1:${WebCalendarService.PORT}/?client=app")
             hasLoadedWall = true
         } else {
             webView.reload()

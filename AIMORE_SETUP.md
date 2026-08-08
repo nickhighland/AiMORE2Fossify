@@ -70,4 +70,4 @@ The installed app checks the repository's latest GitHub Release once daily. If a
 
 ## LAN web interface
 
-Once the app is running, open the device's displayed LAN address, normally `http://<calendar-ip>:8080`, from a phone or computer on the same network. The service is intentionally local-only and unauthenticated; do not expose port 8080 outside a trusted LAN. Weather is hidden automatically in portrait mode and on phone-sized web views so the calendar list and calendar remain usable.
+Once the app is running, open the device's displayed LAN address, normally `http://<calendar-ip>:8080`, from a phone or computer on the same network. The service is intentionally local-only and unauthenticated; do not expose port 8080 outside a trusted LAN. The weather card is intentionally limited to the native wall app; the LAN web interface keeps calendar management focused and places the required weather-source attribution in its Settings footnote.

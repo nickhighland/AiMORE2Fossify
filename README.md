@@ -9,8 +9,8 @@ AiMORE2Fossify is a customized Fossify Calendar build for AiMOR Android digital 
 - Automatic ICS refreshes at least every 15 minutes.
 - Month, month + day, week, and agenda views, including a selectable startup view.
 - Day/night/automatic display modes, adaptive brightness, orientation control, and Today-or-Sunday week starts.
-- A landscape weather card powered by Open-Meteo, with manual ZIP code and location label settings.
-- Weather hidden automatically in portrait mode and phone-sized web views.
+- A weather card powered by Open-Meteo in the native wall app in both portrait and landscape, with manual ZIP code and location label settings.
+- Weather is hidden from the LAN web interface so phone/computer calendar management stays focused; attribution is available as a Settings footnote.
 - KISS launcher integration and automatic wall-calendar startup after reboot.
 - Daily GitHub Releases update checks with a manual check in native Settings and an approval prompt before installation.
 
@@ -39,7 +39,7 @@ Install Android SDK/platform-tools and use the included Gradle wrapper:
 The debug APK is created at:
 
 ~~~text
-app/build/outputs/apk/foss/debug/calendar-22-foss-debug.apk
+app/build/outputs/apk/foss/debug/calendar-23-foss-debug.apk
 ~~~
 
 For a release build:
@@ -76,7 +76,7 @@ When the app starts, it opens Wall Calendar mode. Open the displayed LAN address
 http://192.168.4.80:8080
 ~~~
 
-The web Settings menu controls startup mode, default view, orientation, brightness, week start, Local-calendar visibility, weather ZIP code, and weather label. The right-hand sidebar keeps the weather card pinned to the bottom in landscape; a long calendar list scrolls without covering or moving it.
+The web Settings menu controls startup mode, default view, orientation, brightness, week start, Local-calendar visibility, weather ZIP code, and weather label. The native wall app keeps the weather card pinned to the bottom of the right-hand column in either orientation; a long calendar list scrolls without covering or moving it. The LAN web interface omits the weather card and keeps its source attribution in the Settings footnote.
 
 ICS files can be imported as editable local copies or read-only snapshots. HTTP(S) ICS feeds are one-way incoming calendars and refresh at least every 15 minutes. Read-only calendars cannot be edited or deleted from the web interface.
 

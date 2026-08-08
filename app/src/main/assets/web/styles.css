@@ -134,10 +134,9 @@ button:hover { filter: brightness(1.16); }
 .weather-day-high { font-size: 1.35rem; font-weight: 800; }
 .weather-day-low { color: #9ed8ff; font-size: 1rem; }
 .weather-day-rain { margin-top: 8px; color: #9ed8ff; font-size: .8rem; }
-.weather-footer { padding: 7px 10px 10px; color: #9fc7e8; font-size: .62rem; text-align: right; }
-.weather-footer a { color: inherit; }
 .weather-error, .weather-unconfigured { padding: 15px 12px; color: #d8eaff; font-size: .8rem; line-height: 1.4; }
 .weather-error strong, .weather-unconfigured strong { display: block; margin-bottom: 4px; color: #fff; }
+body:not(.native-wall) .weather-widget { display: none !important; }
 .week-view { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); min-height: 600px; }
 .week-column { min-width: 0; border-right: 1px solid var(--line); }
 .week-column:last-child { border-right: 0; }
@@ -206,9 +205,8 @@ body[data-theme="day"] textarea { color: var(--text); background: #fff; }
   .event-chip { padding: 5px; font-size: .72rem; }
 }
 
-@media (orientation: portrait), (max-width: 700px) {
-  .weather-widget { display: none !important; }
-}
+.settings-footnote { color: var(--muted); font-size: .75rem; line-height: 1.4; }
+.settings-footnote a { color: var(--accent); }
 
 @media (max-width: 700px) {
   .calendar-list { grid-template-columns: 1fr; }
