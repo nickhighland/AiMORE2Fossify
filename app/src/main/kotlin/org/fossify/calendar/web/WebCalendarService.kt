@@ -214,7 +214,8 @@ private class CalendarHttpServer(
             config.wallShowLocalCalendar = body.optBoolean("showLocalCalendar", true)
         }
         if (body.has("defaultView")) {
-            val view = body.optString("defaultView").lowercase()
+            val requestedView = body.optString("defaultView").lowercase()
+            val view = if (requestedView == "weekly") "week" else requestedView
             require(view in setOf("month", "monthday", "week", "agenda")) {
                 "defaultView must be month, monthday, week, or agenda"
             }

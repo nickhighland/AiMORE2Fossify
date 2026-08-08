@@ -49,7 +49,11 @@
     const selectedColor = color(selected).toLowerCase();
     return COLOR_PALETTE.map((hex) => `<button type="button" class="palette-swatch ${hex === selectedColor ? "selected" : ""}" style="--swatch-color:${hex}" ${attribute}="${hex}" ${valueAttribute}="${hex}" title="${hex}" aria-label="${hex}"></button>`).join("");
   }
-  function isWallView(value) { return ["month", "monthday", "week", "agenda"].includes(value); }
+  function normalizeView(value) {
+    const normalized = String(value || "").toLowerCase();
+    return normalized === "weekly" ? "week" : normalized;
+  }
+  function isWallView(value) { return ["month", "monthday", "week", "agenda"].includes(normalizeView(value)); }
   function setStatus(text, error = false) { $("status").textContent = text; $("status").classList.toggle("error", error); }
 
   async function api(path, options = {}) {
@@ -68,7 +72,15 @@
   }
 
   function applyWallSettings(settings) {
+    const incomingSettings = settings || {};
+    const previousDefaultView = normalizeView(state.settings.defaultView);
     state.settings = { ...state.settings, ...(settings || {}) };
+    if (Object.prototype.hasOwnProperty.call(incomingSettings, "defaultView")
+        && state.defaultViewApplied
+        && isWallView(state.settings.defaultView)
+        && previousDefaultView !== normalizeView(state.settings.defaultView)) {
+      state.view = normalizeView(state.settings.defaultView);
+    }
     document.body.dataset.theme = effectiveTheme(state.settings);
     if ($("displayMode")) {
       $("displayMode").value = state.settings.displayMode || "auto";
@@ -77,7 +89,7 @@
       $("weekStart").value = state.settings.weekStart || "today";
       $("startWallMode").checked = state.settings.startWallMode !== false;
       $("showLocalCalendar").checked = state.settings.showLocalCalendar !== false;
-      $("defaultView").value = isWallView(state.settings.defaultView) ? state.settings.defaultView : "month";
+      $("defaultView").value = isWallView(state.settings.defaultView) ? normalizeView(state.settings.defaultView) : "month";
     }
     if ($("calendarGrid")) render();
   }
@@ -111,7 +123,7 @@
       state.weather = weather || null;
       state.settings = { ...state.settings, ...(settings || {}) };
       if (!state.defaultViewApplied) {
-        state.view = isWallView(state.settings.defaultView) ? state.settings.defaultView : "month";
+        state.view = isWallView(state.settings.defaultView) ? normalizeView(state.settings.defaultView) : "month";
         state.defaultViewApplied = true;
       }
       applyWallSettings(state.settings);
@@ -413,7 +425,7 @@
     $("weekStart").value = state.settings.weekStart || "today";
     $("startWallMode").checked = state.settings.startWallMode !== false;
     $("showLocalCalendar").checked = state.settings.showLocalCalendar !== false;
-    $("defaultView").value = isWallView(state.settings.defaultView) ? state.settings.defaultView : "month";
+    $("defaultView").value = isWallView(state.settings.defaultView) ? normalizeView(state.settings.defaultView) : "month";
     $("weatherZip").value = state.settings.weatherZip || "";
     $("weatherLabel").value = state.settings.weatherLabel || "";
     $("settingsError").textContent = "";
@@ -456,12 +468,16 @@
           weekStart: $("weekStart").value,
           startWallMode: $("startWallMode").checked,
           showLocalCalendar: $("showLocalCalendar").checked,
-          defaultView: $("defaultView").value,
+          defaultView: normalizeView($("defaultView").value),
           weatherZip: $("weatherZip").value.trim(),
           weatherLabel: $("weatherLabel").value.trim()
         })
       });
       state.settings = { ...state.settings, ...settings };
+      if (isWallView(settings.defaultView)) {
+        state.view = normalizeView(settings.defaultView);
+        state.defaultViewApplied = true;
+      }
       applyWallSettings(state.settings);
       $("settingsDialog").close();
       await load();

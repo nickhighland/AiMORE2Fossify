@@ -146,6 +146,7 @@ class WallCalendarActivity : SimpleActivity() {
                 .put("adaptiveBrightness", config.wallAdaptiveBrightness)
                 .put("orientation", config.wallOrientation)
                 .put("weekStart", config.wallWeekStart)
+                .put("defaultView", config.wallDefaultView)
             webView.evaluateJavascript("window.applyWallSettings && window.applyWallSettings($settings)", null)
         }
     }

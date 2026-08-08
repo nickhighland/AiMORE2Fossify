@@ -59,7 +59,10 @@ class Config(context: Context) : BaseConfig(context) {
         set(show) = prefs.edit().putBoolean(WALL_SHOW_LOCAL_CALENDAR, show).apply()
 
     var wallDefaultView: String
-        get() = prefs.getString(WALL_DEFAULT_VIEW, "month") ?: "month"
+        get() = when (prefs.getString(WALL_DEFAULT_VIEW, "month")?.lowercase()) {
+            "weekly" -> "week"
+            else -> prefs.getString(WALL_DEFAULT_VIEW, "month") ?: "month"
+        }
         set(view) = prefs.edit().putString(WALL_DEFAULT_VIEW, view).apply()
 
     var weatherZip: String
