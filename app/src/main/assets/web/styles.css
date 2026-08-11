@@ -138,20 +138,21 @@ button:hover { filter: brightness(1.16); }
 .weather-error strong, .weather-unconfigured strong { display: block; margin-bottom: 4px; color: #fff; }
 body:not(.native-wall) .weather-widget { display: none !important; }
 .week-view { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); min-height: 600px; }
+.week-view.time-grid-host { display: block; }
 .week-column { min-width: 0; border-right: 1px solid var(--line); }
 .week-column:last-child { border-right: 0; }
 .week-column-header { padding: 16px 10px; border-bottom: 1px solid var(--line); text-align: center; color: var(--muted); }
 .week-column-header strong { display: block; color: var(--text); font-size: 1.25rem; }
 .week-events { display: grid; gap: 8px; padding: 10px; }
 .time-grid { --time-grid-hour-height: 72px; min-width: 0; overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
-.time-grid-header, .time-grid-body { display: grid; grid-template-columns: 64px repeat(var(--grid-days), minmax(160px, 1fr)); min-width: 720px; }
-.time-grid-agenda .time-grid-header, .time-grid-agenda .time-grid-body { min-width: 360px; }
+.time-grid-header, .time-grid-body { display: grid; grid-template-columns: 64px repeat(7, minmax(160px, 1fr)); min-width: 1184px; }
+.time-grid-agenda .time-grid-header, .time-grid-agenda .time-grid-body { grid-template-columns: 64px minmax(160px, 1fr); min-width: 360px; }
 .time-grid-header { border-bottom: 1px solid var(--line); }
 .time-grid-corner { border-right: 1px solid var(--line); }
 .time-grid-day-header { display: grid; gap: 3px; justify-items: center; padding: 10px 6px; border-left: 1px solid var(--line); color: var(--muted); font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .time-grid-day-header strong { color: var(--text); font-size: 1.2rem; letter-spacing: 0; }
 .time-grid-label-column { min-width: 0; border-right: 1px solid var(--line); }
-.time-grid-all-day-label, .time-grid-all-day { min-height: 36px; padding: 8px 5px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .68rem; font-weight: 700; }
+.time-grid-all-day-label, .time-grid-all-day { height: var(--time-grid-all-day-height, 36px); min-height: var(--time-grid-all-day-height, 36px); padding: 8px 5px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .68rem; font-weight: 700; }
 .time-grid-hour-labels { height: calc(var(--grid-hours) * var(--time-grid-hour-height)); }
 .time-grid-hour-label { height: var(--time-grid-hour-height); padding: 5px 6px 0 0; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .72rem; text-align: right; }
 .time-grid-column { min-width: 0; border-left: 1px solid var(--line); }
@@ -227,7 +228,7 @@ body[data-theme="day"] textarea { color: var(--text); background: #fff; }
   .month-day-month { border-right: 0; border-bottom: 1px solid var(--line); }
   .month-day-cell { min-height: 78px; padding: 5px; }
   .event-chip { padding: 6px; font-size: .84rem; }
-  .time-grid-header, .time-grid-body { min-width: 980px; }
+  .time-grid-header, .time-grid-body { min-width: 1184px; }
   .time-grid-agenda .time-grid-header, .time-grid-agenda .time-grid-body { min-width: 420px; }
 }
 

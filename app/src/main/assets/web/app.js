@@ -322,7 +322,7 @@
       })
       : [startOfDay(state.date)];
     const hourLabels = Array.from({ length: endHour - startHour }, (_, index) => `<div class="time-grid-hour-label">${formatGridHour(startHour + index)}</div>`).join("");
-    const columns = days.map((day) => {
+    const dayColumns = days.map((day) => {
       const dayStart = startOfDay(day);
       const visibleStart = toSeconds(new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), startHour));
       const events = timedEventsForDay(day, startHour, endHour);
@@ -334,15 +334,22 @@
         return { item, lane };
       });
       const allDayEvents = eventsForDay(day).filter((event) => event.allDay);
-      return `<div class="time-grid-column"><div class="time-grid-all-day">${allDayEvents.map(timeGridAllDayMarkup).join("")}</div><div class="time-grid-hours">${positioned.map(({ item, lane }) => timeGridEventMarkup(item, lane, laneEnds.length, visibleStart)).join("")}</div></div>`;
-    }).join("");
+      return { allDayEvents, positioned, laneCount: laneEnds.length, visibleStart };
+    });
+    const maxAllDayCount = dayColumns.reduce((maximum, column) => Math.max(maximum, column.allDayEvents.length), 0);
+    const allDayHeight = maxAllDayCount === 0 ? 36 : 16 + maxAllDayCount * 24 + Math.max(0, maxAllDayCount - 1) * 3;
+    const columns = dayColumns.map(({ allDayEvents, positioned, laneCount, visibleStart }) =>
+      `<div class="time-grid-column"><div class="time-grid-all-day">${allDayEvents.map(timeGridAllDayMarkup).join("")}</div><div class="time-grid-hours">${positioned.map(({ item, lane }) => timeGridEventMarkup(item, lane, laneCount, visibleStart)).join("")}</div></div>`
+    ).join("");
     const headers = days.map((day) => `<div class="time-grid-day-header"><span>${dayNames[day.getDay()]}</span><strong>${day.getDate()}</strong></div>`).join("");
     const target = mode === "week" ? $("weekView") : $("agendaView");
-    target.innerHTML = `<div class="time-grid time-grid-${mode}" style="--grid-hours:${endHour - startHour};--grid-days:${days.length}"><div class="time-grid-header"><div class="time-grid-corner"></div>${headers}</div><div class="time-grid-body"><div class="time-grid-label-column"><div class="time-grid-all-day-label">All day</div><div class="time-grid-hour-labels">${hourLabels}</div></div>${columns}</div></div>`;
+    target.classList.add("time-grid-host");
+    target.innerHTML = `<div class="time-grid time-grid-${mode}" style="--grid-hours:${endHour - startHour};--grid-days:${days.length};--time-grid-all-day-height:${allDayHeight}px"><div class="time-grid-header"><div class="time-grid-corner"></div>${headers}</div><div class="time-grid-body"><div class="time-grid-label-column"><div class="time-grid-all-day-label">All day</div><div class="time-grid-hour-labels">${hourLabels}</div></div>${columns}</div></div>`;
     attachEventClicks(target);
   }
 
   function renderWeek() {
+    $("weekView").classList.remove("time-grid-host");
     const range = rangeForView();
     let html = "";
     for (let index = 0; index < 7; index += 1) {
@@ -355,6 +362,7 @@
   }
 
   function renderAgenda() {
+    $("agendaView").classList.remove("time-grid-host");
     const days = {};
     state.events.slice().sort((a, b) => a.start - b.start).forEach((event) => {
       const key = dateKey(fromSeconds(event.start));
