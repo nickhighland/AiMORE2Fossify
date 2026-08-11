@@ -66,9 +66,9 @@ button:hover { filter: brightness(1.16); }
 .month-day-add { width: max-content; margin-top: 7px; }
 .month-day-events { display: grid; gap: 8px; padding-top: 16px; }
 .day-events { display: grid; gap: 5px; }
-.event-chip { display: block; width: 100%; overflow: hidden; padding: 6px 8px; border: 0; border-left: 4px solid var(--event-color, var(--accent)); border-radius: 5px; background: #253247; text-align: left; text-overflow: ellipsis; white-space: nowrap; font-size: .82rem; }
+.event-chip { display: block; width: 100%; overflow: hidden; padding: 7px 8px; border: 0; border-left: 4px solid var(--event-color, var(--accent)); border-radius: 5px; background: #253247; text-align: left; text-overflow: ellipsis; white-space: nowrap; font-size: .95rem; font-weight: 600; }
 .event-chip .event-title { display: block; overflow: hidden; text-overflow: ellipsis; }
-.event-chip .event-time { display: block; color: var(--muted); margin-top: 2px; font-size: .7rem; }
+.event-chip .event-time { display: block; color: var(--muted); margin-top: 3px; font-size: .78rem; font-weight: 500; }
 .hidden { display: none !important; }
 .side-panel {
   display: flex;
@@ -148,7 +148,7 @@ body:not(.native-wall) .weather-widget { display: none !important; }
 .agenda-day h3 { color: var(--accent); font-size: 1rem; margin: 0 0 8px; }
 .agenda-event { display: flex; gap: 13px; width: 100%; padding: 12px; margin-bottom: 7px; border: 0; border-left: 5px solid var(--event-color, var(--accent)); border-radius: 8px; background: #202b3b; text-align: left; }
 .agenda-event-time { min-width: 72px; color: var(--muted); }
-.agenda-event-title { font-weight: 700; }
+.agenda-event-title { font-size: 1rem; font-weight: 700; }
 .agenda-event-meta { color: var(--muted); margin-top: 3px; font-size: .84rem; }
 .event-dialog { width: min(560px, calc(100vw - 28px)); max-height: calc(100vh - 28px); border: 1px solid var(--line); border-radius: 16px; padding: 0; color: var(--text); background: var(--panel); box-shadow: 0 25px 80px #000b; }
 .event-dialog::backdrop { background: #0009; }
@@ -202,7 +202,7 @@ body[data-theme="day"] textarea { color: var(--text); background: #fff; }
   .month-day-view { grid-template-columns: 1fr; }
   .month-day-month { border-right: 0; border-bottom: 1px solid var(--line); }
   .month-day-cell { min-height: 78px; padding: 5px; }
-  .event-chip { padding: 5px; font-size: .72rem; }
+  .event-chip { padding: 6px; font-size: .84rem; }
 }
 
 .settings-footnote { color: var(--muted); font-size: .75rem; line-height: 1.4; }
@@ -222,8 +222,8 @@ body[data-theme="day"] textarea { color: var(--text); background: #fff; }
   .day-cell { min-height: 77px; padding: 3px; }
   .month-day-cell { min-height: 61px; padding: 3px; }
   .day-number { min-width: 24px; height: 24px; margin-bottom: 2px; font-size: .8rem; }
-  .event-chip { border-left-width: 3px; padding: 3px; font-size: .61rem; }
-  .event-chip .event-time { display: none; }
+  .event-chip { border-left-width: 3px; padding: 4px; font-size: .72rem; }
+  .event-chip .event-time { display: block; font-size: .64rem; }
   .form-row { grid-template-columns: 1fr; }
   .settings-grid { grid-template-columns: 1fr; }
   .settings-color-palette { grid-template-columns: repeat(8, 24px); }

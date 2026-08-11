@@ -59,6 +59,24 @@
   function isWallView(value) { return ["month", "monthday", "week", "agenda"].includes(normalizeView(value)); }
   function setStatus(text, error = false) { $("status").textContent = text; $("status").classList.toggle("error", error); }
 
+  function moveDate(amount) {
+    if (state.view === "week") {
+      state.date.setDate(state.date.getDate() + amount * 7);
+    } else if (state.view === "monthday") {
+      state.date.setDate(state.date.getDate() + amount);
+    } else {
+      state.date.setMonth(state.date.getMonth() + amount);
+    }
+  }
+
+  function updateNavigationLabels() {
+    const unit = state.view === "week" ? "week" : state.view === "monthday" ? "day" : "month";
+    $("prev").setAttribute("aria-label", `Previous ${unit}`);
+    $("prev").title = `Previous ${unit}`;
+    $("next").setAttribute("aria-label", `Next ${unit}`);
+    $("next").title = `Next ${unit}`;
+  }
+
   async function api(path, options = {}) {
     const isFormData = options.body instanceof FormData;
     const headers = isFormData ? {} : { "Content-Type": "application/json" };
@@ -147,6 +165,7 @@
       $("status").classList.remove("error");
     }
     document.body.dataset.theme = effectiveTheme(state.settings);
+    updateNavigationLabels();
     document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === state.view));
     $("calendarGrid").classList.toggle("hidden", state.view !== "month");
     $("monthDayView").classList.toggle("hidden", state.view !== "monthday");
@@ -517,8 +536,8 @@
     } catch (error) { $("calendarError").textContent = error.message; }
   }
 
-  $("prev").addEventListener("click", () => { if (state.view === "week") state.date.setDate(state.date.getDate() - 7); else state.date.setMonth(state.date.getMonth() - 1); load(); });
-  $("next").addEventListener("click", () => { if (state.view === "week") state.date.setDate(state.date.getDate() + 7); else state.date.setMonth(state.date.getMonth() + 1); load(); });
+  $("prev").addEventListener("click", () => { moveDate(-1); load(); });
+  $("next").addEventListener("click", () => { moveDate(1); load(); });
   $("today").addEventListener("click", () => { state.date = new Date(); load(); });
   $("newEvent").addEventListener("click", () => openNewEvent());
   $("closeDialog").addEventListener("click", () => $("eventDialog").close());

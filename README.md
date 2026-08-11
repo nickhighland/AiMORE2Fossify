@@ -8,6 +8,7 @@ AiMORE2Fossify is a customized Fossify Calendar build for AiMOR Android digital 
 - Multiple calendars with colors, deletion, visibility controls, editable local calendars, read-only imports, and one-way ICS feeds.
 - Automatic ICS refreshes at least every 15 minutes.
 - Month, month + day, week, and agenda views, including a selectable startup view.
+- Previous/next arrows move by month, week, or day according to the active view; event text is sized for wall readability.
 - Day/night/automatic display modes, adaptive brightness, orientation control, and Today-or-Sunday week starts.
 - A weather card powered by Open-Meteo in the native wall app in both portrait and landscape, with manual ZIP code and location label settings.
 - Weather is hidden from the LAN web interface so phone/computer calendar management stays focused; attribution is available as a Settings footnote.
@@ -39,7 +40,7 @@ Install Android SDK/platform-tools and use the included Gradle wrapper:
 The debug APK is created at:
 
 ~~~text
-app/build/outputs/apk/foss/debug/calendar-23-foss-debug.apk
+app/build/outputs/apk/foss/debug/calendar-24-foss-debug.apk
 ~~~
 
 For a release build:
