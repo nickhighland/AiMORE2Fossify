@@ -3,8 +3,10 @@ package org.fossify.calendar.web
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import org.fossify.calendar.BuildConfig
 import org.fossify.calendar.R
 import org.fossify.calendar.activities.MainActivity
+import org.fossify.calendar.activities.SettingsActivity
 import org.fossify.calendar.extensions.calendarsDB
 import org.fossify.calendar.extensions.config
 import org.fossify.calendar.extensions.eventsDB
@@ -21,6 +23,7 @@ import org.fossify.calendar.helpers.WEB_SYNC_LOCAL
 import org.fossify.calendar.helpers.getNowSeconds
 import org.fossify.calendar.models.CalendarEntity
 import org.fossify.calendar.models.Event
+import org.fossify.calendar.updates.UpdateManager
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.joda.time.DateTime
 import fi.iki.elonen.NanoHTTPD
@@ -99,6 +102,7 @@ private class CalendarHttpServer(
                 session.method == Method.GET && session.uri == "/icons/calendar.svg" -> assetResponse("icons/calendar.svg", "image/svg+xml")
                 session.method == Method.GET && session.uri == "/sw.js" -> assetResponse("sw.js", "text/javascript")
                 session.method == Method.GET && session.uri == "/api/status" -> statusResponse()
+                session.method == Method.GET && session.uri == "/api/check-updates" -> checkUpdatesResponse()
                 session.method == Method.GET && session.uri == "/api/settings" -> settingsResponse()
                 session.method == Method.GET && session.uri == "/api/weather" -> weatherResponse()
                 session.method == Method.PUT && session.uri == "/api/settings" -> updateSettings(session)
@@ -138,10 +142,28 @@ private class CalendarHttpServer(
             put("port", WebCalendarService.PORT)
             put("localOnly", true)
             put("app", appContext.getString(R.string.app_launcher_name))
+            put("version", BuildConfig.VERSION_NAME)
             put("timezone", TimeZone.getDefault().id)
             put("addresses", JSONArray(findLanAddresses()))
         }
         return jsonResponse(result)
+    }
+
+    private fun checkUpdatesResponse(): Response {
+        val update = UpdateManager.checkNowBlocking(appContext)
+        if (update == null) return jsonResponse(JSONObject().put("available", false))
+
+        UpdateManager.queueUpdate(appContext, update)
+        appContext.startActivity(
+            Intent(appContext, SettingsActivity::class.java).addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            )
+        )
+        return jsonResponse(
+            JSONObject()
+                .put("available", true)
+                .put("version", update.version)
+        )
     }
 
     private fun calendarsResponse(): Response {

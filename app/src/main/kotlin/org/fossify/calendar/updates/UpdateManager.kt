@@ -66,6 +66,23 @@ object UpdateManager {
         }
     }
 
+    /** Synchronous check for the local wall-settings endpoint, which runs off the main thread. */
+    fun checkNowBlocking(context: Context): UpdateInfo? {
+        val result = runCatching { fetchLatest() }
+        if (result.isSuccess) {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putLong(LAST_CHECK, System.currentTimeMillis())
+                .apply()
+        }
+        return result.getOrThrow()?.takeIf(::isNewer)
+    }
+
+    /** Queue a manually discovered update so SettingsActivity can show its approval dialog. */
+    fun queueUpdate(context: Context, update: UpdateInfo) {
+        savePending(context, update)
+    }
+
     suspend fun checkDaily(context: Context): UpdateInfo? {
         val preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()

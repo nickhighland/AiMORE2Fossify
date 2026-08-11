@@ -192,7 +192,8 @@
         : state.view === "agenda" ? "Agenda" : monthFormatter.format(state.date);
     $("clock").textContent = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "short" }).format(new Date());
     if (status) {
-      $("status").textContent = status.addresses?.length ? `Local web interface · ${status.addresses.map((ip) => `http://${ip}:${status.port}`).join(" · ")}` : "Local web interface · Wi-Fi address unavailable";
+      const version = status.version ? "v" + status.version + " · " : "";
+      $("status").textContent = status.addresses?.length ? version + "Local web interface · " + status.addresses.map((ip) => "http://" + ip + ":" + status.port).join(" · ") : version + "Local web interface · Wi-Fi address unavailable";
       $("status").classList.remove("error");
     }
     document.body.dataset.theme = effectiveTheme(state.settings);
@@ -556,6 +557,8 @@
     $("weatherZip").value = state.settings.weatherZip || "";
     $("weatherLabel").value = state.settings.weatherLabel || "";
     $("settingsError").textContent = "";
+    $("updateStatus").textContent = "";
+    $("updateStatus").classList.remove("error");
     $("settingsDialog").showModal();
   }
 
@@ -614,6 +617,25 @@
     } catch (error) { $("settingsError").textContent = error.message; }
   }
 
+  async function checkForUpdates() {
+    const button = $("checkForUpdates");
+    const status = $("updateStatus");
+    button.disabled = true;
+    status.textContent = "Checking…";
+    status.classList.remove("error");
+    try {
+      const result = await api("/api/check-updates");
+      status.textContent = result.available
+        ? "Version " + result.version + " is available. The calendar is opening the install prompt."
+        : "You are using the latest version.";
+    } catch (error) {
+      status.textContent = error.message;
+      status.classList.add("error");
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   async function importCalendar() {
     const file = $("sourceFile").files[0];
     const url = $("sourceUrl").value.trim();
@@ -660,6 +682,7 @@
   $("closeSettings").addEventListener("click", () => $("settingsDialog").close());
   $("cancelSettings").addEventListener("click", () => $("settingsDialog").close());
   $("saveSettings").addEventListener("click", saveSettings);
+  $("checkForUpdates").addEventListener("click", checkForUpdates);
   $("closeCalendar").addEventListener("click", () => $("calendarDialog").close());
   $("cancelCalendar").addEventListener("click", () => $("calendarDialog").close());
   $("doImport").addEventListener("click", importCalendar);

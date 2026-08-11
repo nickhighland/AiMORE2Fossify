@@ -108,6 +108,10 @@
         <label>Weather location label<input id="weatherLabel" maxlength="120" placeholder="e.g. Home or Rochester, NY"></label>
       </div>
       <p class="settings-help">Hourly time-grid mode uses one block per hour. Timed events are placed by their start and end times; all-day events remain above the hourly rows.</p>
+      <div class="settings-update-row">
+        <button type="button" id="checkForUpdates" class="secondary">Check for updates</button>
+        <span id="updateStatus" class="settings-help" role="status"></span>
+      </div>
       <p class="settings-footnote">Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Air quality: <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noreferrer">Copernicus CAMS ENSEMBLE</a>.</p>
       <div id="settingsError" class="form-error" role="alert"></div>
       <div class="dialog-actions"><button type="button" id="exitWallMode" class="secondary">Exit wall mode</button><span class="grow"></span><button type="button" id="cancelSettings" class="secondary">Close</button><button type="button" id="saveSettings" class="primary">Save settings</button></div>

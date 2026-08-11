@@ -183,6 +183,7 @@ body:not(.native-wall) .weather-widget { display: none !important; }
 .source-section { display: grid; gap: 12px; padding-top: 8px; border-top: 1px solid var(--line); }
 .source-help { color: var(--muted); font-size: .88rem; line-height: 1.4; }
 .settings-help { color: var(--muted); font-size: .78rem; line-height: 1.4; }
+.settings-update-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .dialog-heading { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 3px; }
 .dialog-heading h2 { margin-top: 5px; font-size: 1.55rem; }
 .close-button { width: 40px; min-height: 40px; padding: 0; font-size: 1.7rem; background: transparent; }

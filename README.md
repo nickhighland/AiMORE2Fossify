@@ -68,7 +68,7 @@ Windows PowerShell:
 
 The installer discovers ADB, disables the factory com.efercro.calendar package and any old debug build, downloads and installs KISS, sets KISS as the Home app, installs AiMORE2Fossify, grants the startup permission required by this firmware, and launches the calendar. Use --serial with multiple devices, --kiss-apk for a local KISS APK, or --skip-kiss to omit launcher installation.
 
-The updater checks the repository's latest GitHub Release once per day. When a newer APK is found it posts a notification; opening it presents an install/ignore prompt. Native Settings also has **Check for updates** for an immediate check. The device must be able to access the repository and its release assets without credentials, so the repository must be public for unattended update checks.
+The updater checks the repository's latest GitHub Release once per day. When a newer APK is found it posts a notification; opening it presents an install/ignore prompt. Native Settings and the wall-view Settings dialog both have **Check for updates** for an immediate check; an update found from the LAN page opens the approval prompt on the calendar. The device must be able to access the repository and its release assets without credentials, so the repository must be public for unattended update checks.
 
 ## Use the wall calendar
 
