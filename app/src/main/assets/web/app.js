@@ -17,7 +17,10 @@
       orientation: "landscape",
       weekStart: "today",
       showLocalCalendar: true,
-      defaultView: "month"
+      defaultView: "month",
+      weekAgendaLayout: "list",
+      timeGridStart: 7,
+      timeGridEnd: 22
     }
   };
   const $ = (id) => document.getElementById(id);
@@ -25,6 +28,25 @@
   const monthFormatter = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
   const dayFormatter = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   const timeFormatter = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+  const hourFormatter = new Intl.DateTimeFormat(undefined, { hour: "numeric" });
+
+  function formatGridHour(hour) {
+    const date = new Date(2000, 0, 1, hour === 24 ? 0 : hour, 0, 0, 0);
+    const label = hourFormatter.format(date);
+    return hour === 24 ? `${label} (next day)` : label;
+  }
+
+  function populateTimeGridHours() {
+    const start = $("timeGridStart");
+    const end = $("timeGridEnd");
+    if (!start || !end) return;
+    start.innerHTML = Array.from({ length: 24 }, (_, hour) => `<option value="${hour}">${formatGridHour(hour)}</option>`).join("");
+    end.innerHTML = Array.from({ length: 24 }, (_, index) => {
+      const hour = index + 1;
+      return `<option value="${hour}">${formatGridHour(hour)}</option>`;
+    }).join("");
+  }
+  populateTimeGridHours();
 
   function dateKey(date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -62,7 +84,7 @@
   function moveDate(amount) {
     if (state.view === "week") {
       state.date.setDate(state.date.getDate() + amount * 7);
-    } else if (state.view === "monthday") {
+    } else if (state.view === "monthday" || (state.view === "agenda" && state.settings.weekAgendaLayout === "timegrid")) {
       state.date.setDate(state.date.getDate() + amount);
     } else {
       state.date.setMonth(state.date.getMonth() + amount);
@@ -70,7 +92,11 @@
   }
 
   function updateNavigationLabels() {
-    const unit = state.view === "week" ? "week" : state.view === "monthday" ? "day" : "month";
+    const unit = state.view === "week"
+      ? "week"
+      : state.view === "monthday" || (state.view === "agenda" && state.settings.weekAgendaLayout === "timegrid")
+        ? "day"
+        : "month";
     $("prev").setAttribute("aria-label", `Previous ${unit}`);
     $("prev").title = `Previous ${unit}`;
     $("next").setAttribute("aria-label", `Next ${unit}`);
@@ -111,6 +137,9 @@
       $("startWallMode").checked = state.settings.startWallMode !== false;
       $("showLocalCalendar").checked = state.settings.showLocalCalendar !== false;
       $("defaultView").value = isWallView(state.settings.defaultView) ? normalizeView(state.settings.defaultView) : "month";
+      $("weekAgendaLayout").value = state.settings.weekAgendaLayout === "timegrid" ? "timegrid" : "list";
+      $("timeGridStart").value = String(Number.isFinite(Number(state.settings.timeGridStart)) ? state.settings.timeGridStart : 7);
+      $("timeGridEnd").value = String(Number.isFinite(Number(state.settings.timeGridEnd)) ? state.settings.timeGridEnd : 22);
     }
     if ($("calendarGrid")) render();
   }
@@ -158,7 +187,9 @@
     const range = rangeForView();
     $("monthTitle").textContent = state.view === "week"
       ? `Week of ${dayFormatter.format(range.start)}`
-      : state.view === "agenda" ? "Agenda" : monthFormatter.format(state.date);
+      : state.view === "agenda" && state.settings.weekAgendaLayout === "timegrid"
+        ? `Agenda · ${dayFormatter.format(state.date)}`
+        : state.view === "agenda" ? "Agenda" : monthFormatter.format(state.date);
     $("clock").textContent = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "short" }).format(new Date());
     if (status) {
       $("status").textContent = status.addresses?.length ? `Local web interface · ${status.addresses.map((ip) => `http://${ip}:${status.port}`).join(" · ")}` : "Local web interface · Wi-Fi address unavailable";
@@ -176,8 +207,12 @@
     renderWeather();
     if (state.view === "month") renderMonth();
     if (state.view === "monthday") renderMonthDay();
-    if (state.view === "week") renderWeek();
-    if (state.view === "agenda") renderAgenda();
+    if (state.view === "week") {
+      if (state.settings.weekAgendaLayout === "timegrid") renderTimeGrid("week"); else renderWeek();
+    }
+    if (state.view === "agenda") {
+      if (state.settings.weekAgendaLayout === "timegrid") renderTimeGrid("agenda"); else renderAgenda();
+    }
   }
 
   function eventsForDay(date) {
@@ -236,6 +271,74 @@
     $("monthDayMonth").querySelectorAll("[data-monthday-date]").forEach((cell) => cell.addEventListener("dblclick", () => openNewEvent(new Date(`${cell.dataset.monthdayDate}T00:00:00`))));
     $("monthDayAdd").addEventListener("click", () => openNewEvent(selectedDate));
     attachEventClicks($("monthDayAgenda"));
+  }
+
+  const TIME_GRID_HOUR_HEIGHT = 72;
+
+  function timeGridSettings() {
+    const requestedStart = Number(state.settings.timeGridStart);
+    const requestedEnd = Number(state.settings.timeGridEnd);
+    const start = Number.isInteger(requestedStart) ? Math.max(0, Math.min(23, requestedStart)) : 7;
+    const end = Number.isInteger(requestedEnd) ? Math.max(1, Math.min(24, requestedEnd)) : 22;
+    return { start, end: end > start ? end : Math.min(24, start + 1) };
+  }
+
+  function timedEventsForDay(day, startHour, endHour) {
+    const dayStart = startOfDay(day);
+    const visibleStart = toSeconds(new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), startHour));
+    const visibleEnd = toSeconds(new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), endHour));
+    return eventsForDay(day)
+      .filter((event) => !event.allDay && Number(event.end) > visibleStart && Number(event.start) < visibleEnd)
+      .map((event) => ({
+        event,
+        start: Math.max(Number(event.start), visibleStart),
+        end: Math.min(Number(event.end), visibleEnd)
+      }))
+      .filter((item) => item.end > item.start)
+      .sort((first, second) => first.start - second.start || first.end - second.end);
+  }
+
+  function timeGridEventMarkup(item, lane, laneCount, visibleStart) {
+    const top = ((item.start - visibleStart) / 3600) * TIME_GRID_HOUR_HEIGHT;
+    const height = Math.max(32, ((item.end - item.start) / 3600) * TIME_GRID_HOUR_HEIGHT - 4);
+    const event = item.event;
+    const time = event.allDay ? "All day" : `${timeFormatter.format(fromSeconds(item.start))}–${timeFormatter.format(fromSeconds(item.end))}`;
+    return `<button class="time-grid-event" style="--event-color:${eventColor(event)};--event-top:${top}px;--event-height:${height}px;--event-left:${lane * (100 / laneCount)}%;--event-width:calc(${100 / laneCount}% - 4px)" data-event-id="${event.id}" data-occurrence="${event.start}"><span class="time-grid-event-title">${escapeHtml(event.title)}</span><span class="time-grid-event-time">${escapeHtml(time)}</span>${event.location ? `<span class="time-grid-event-location">${escapeHtml(event.location)}</span>` : ""}</button>`;
+  }
+
+  function timeGridAllDayMarkup(event) {
+    return `<button class="time-grid-all-day-event" style="--event-color:${eventColor(event)}" data-event-id="${event.id}" data-occurrence="${event.start}">${escapeHtml(event.title)}</button>`;
+  }
+
+  function renderTimeGrid(mode) {
+    const { start: startHour, end: endHour } = timeGridSettings();
+    const days = mode === "week"
+      ? Array.from({ length: 7 }, (_, index) => {
+        const day = startOfDay(state.date);
+        if (state.settings.weekStart !== "today") day.setDate(day.getDate() - day.getDay());
+        day.setDate(day.getDate() + index);
+        return day;
+      })
+      : [startOfDay(state.date)];
+    const hourLabels = Array.from({ length: endHour - startHour }, (_, index) => `<div class="time-grid-hour-label">${formatGridHour(startHour + index)}</div>`).join("");
+    const columns = days.map((day) => {
+      const dayStart = startOfDay(day);
+      const visibleStart = toSeconds(new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), startHour));
+      const events = timedEventsForDay(day, startHour, endHour);
+      const laneEnds = [];
+      const positioned = events.map((item) => {
+        let lane = laneEnds.findIndex((end) => end <= item.start);
+        if (lane < 0) lane = laneEnds.length;
+        laneEnds[lane] = item.end;
+        return { item, lane };
+      });
+      const allDayEvents = eventsForDay(day).filter((event) => event.allDay);
+      return `<div class="time-grid-column"><div class="time-grid-all-day">${allDayEvents.map(timeGridAllDayMarkup).join("")}</div><div class="time-grid-hours">${positioned.map(({ item, lane }) => timeGridEventMarkup(item, lane, laneEnds.length, visibleStart)).join("")}</div></div>`;
+    }).join("");
+    const headers = days.map((day) => `<div class="time-grid-day-header"><span>${dayNames[day.getDay()]}</span><strong>${day.getDate()}</strong></div>`).join("");
+    const target = mode === "week" ? $("weekView") : $("agendaView");
+    target.innerHTML = `<div class="time-grid time-grid-${mode}" style="--grid-hours:${endHour - startHour};--grid-days:${days.length}"><div class="time-grid-header"><div class="time-grid-corner"></div>${headers}</div><div class="time-grid-body"><div class="time-grid-label-column"><div class="time-grid-all-day-label">All day</div><div class="time-grid-hour-labels">${hourLabels}</div></div>${columns}</div></div>`;
+    attachEventClicks(target);
   }
 
   function renderWeek() {
@@ -447,6 +550,9 @@
     $("startWallMode").checked = state.settings.startWallMode !== false;
     $("showLocalCalendar").checked = state.settings.showLocalCalendar !== false;
     $("defaultView").value = isWallView(state.settings.defaultView) ? normalizeView(state.settings.defaultView) : "month";
+    $("weekAgendaLayout").value = state.settings.weekAgendaLayout === "timegrid" ? "timegrid" : "list";
+    $("timeGridStart").value = String(Number.isFinite(Number(state.settings.timeGridStart)) ? state.settings.timeGridStart : 7);
+    $("timeGridEnd").value = String(Number.isFinite(Number(state.settings.timeGridEnd)) ? state.settings.timeGridEnd : 22);
     $("weatherZip").value = state.settings.weatherZip || "";
     $("weatherLabel").value = state.settings.weatherLabel || "";
     $("settingsError").textContent = "";
@@ -490,6 +596,9 @@
           startWallMode: $("startWallMode").checked,
           showLocalCalendar: $("showLocalCalendar").checked,
           defaultView: normalizeView($("defaultView").value),
+          weekAgendaLayout: $("weekAgendaLayout").value,
+          timeGridStart: Number($("timeGridStart").value),
+          timeGridEnd: Number($("timeGridEnd").value),
           weatherZip: $("weatherZip").value.trim(),
           weatherLabel: $("weatherLabel").value.trim()
         })

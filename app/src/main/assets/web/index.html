@@ -101,9 +101,13 @@
         <label class="check-setting"><input id="startWallMode" type="checkbox"> Start in wall mode on launch</label>
         <label class="check-setting"><input id="showLocalCalendar" type="checkbox"> Show Local calendar in sidebar</label>
         <label>Default view on startup<select id="defaultView"><option value="month">Month</option><option value="monthday">Month + day</option><option value="week">Week</option><option value="agenda">Agenda</option></select></label>
+        <label>Week &amp; agenda layout<select id="weekAgendaLayout"><option value="list">Event list</option><option value="timegrid">Hourly time grid</option></select></label>
+        <label>Time grid starts<select id="timeGridStart"></select></label>
+        <label>Time grid ends<select id="timeGridEnd"></select></label>
         <label>Weather ZIP code<input id="weatherZip" maxlength="16" inputmode="numeric" placeholder="e.g. 14623"></label>
         <label>Weather location label<input id="weatherLabel" maxlength="120" placeholder="e.g. Home or Rochester, NY"></label>
       </div>
+      <p class="settings-help">Hourly time-grid mode uses one block per hour. Timed events are placed by their start and end times; all-day events remain above the hourly rows.</p>
       <p class="settings-footnote">Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Air quality: <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noreferrer">Copernicus CAMS ENSEMBLE</a>.</p>
       <div id="settingsError" class="form-error" role="alert"></div>
       <div class="dialog-actions"><button type="button" id="exitWallMode" class="secondary">Exit wall mode</button><span class="grow"></span><button type="button" id="cancelSettings" class="secondary">Close</button><button type="button" id="saveSettings" class="primary">Save settings</button></div>

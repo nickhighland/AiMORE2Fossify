@@ -65,6 +65,19 @@ class Config(context: Context) : BaseConfig(context) {
         }
         set(view) = prefs.edit().putString(WALL_DEFAULT_VIEW, view).apply()
 
+    var wallWeekAgendaLayout: String
+        get() = prefs.getString(WALL_WEEK_AGENDA_LAYOUT, "list")?.lowercase()
+            ?.takeIf { it == "timegrid" } ?: "list"
+        set(layout) = prefs.edit().putString(WALL_WEEK_AGENDA_LAYOUT, layout).apply()
+
+    var wallTimeGridStart: Int
+        get() = prefs.getInt(WALL_TIME_GRID_START, 7).coerceIn(0, 23)
+        set(hour) = prefs.edit().putInt(WALL_TIME_GRID_START, hour.coerceIn(0, 23)).apply()
+
+    var wallTimeGridEnd: Int
+        get() = prefs.getInt(WALL_TIME_GRID_END, 22).coerceIn(1, 24)
+        set(hour) = prefs.edit().putInt(WALL_TIME_GRID_END, hour.coerceIn(1, 24)).apply()
+
     var weatherZip: String
         get() = prefs.getString(WEATHER_ZIP, "") ?: ""
         set(zip) = prefs.edit().putString(WEATHER_ZIP, zip).apply()

@@ -147,6 +147,9 @@ class WallCalendarActivity : SimpleActivity() {
                 .put("orientation", config.wallOrientation)
                 .put("weekStart", config.wallWeekStart)
                 .put("defaultView", config.wallDefaultView)
+                .put("weekAgendaLayout", config.wallWeekAgendaLayout)
+                .put("timeGridStart", config.wallTimeGridStart)
+                .put("timeGridEnd", config.wallTimeGridEnd)
             webView.evaluateJavascript("window.applyWallSettings && window.applyWallSettings($settings)", null)
         }
     }

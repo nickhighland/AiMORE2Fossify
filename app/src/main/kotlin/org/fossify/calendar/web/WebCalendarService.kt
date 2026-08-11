@@ -163,6 +163,9 @@ private class CalendarHttpServer(
             put("weekStart", config.wallWeekStart)
             put("showLocalCalendar", config.wallShowLocalCalendar)
             put("defaultView", config.wallDefaultView)
+            put("weekAgendaLayout", config.wallWeekAgendaLayout)
+            put("timeGridStart", config.wallTimeGridStart)
+            put("timeGridEnd", config.wallTimeGridEnd)
             put("weatherZip", config.weatherZip)
             put("weatherLabel", config.weatherLabel)
             put("port", WebCalendarService.PORT)
@@ -220,6 +223,22 @@ private class CalendarHttpServer(
                 "defaultView must be month, monthday, week, or agenda"
             }
             config.wallDefaultView = view
+        }
+        if (body.has("weekAgendaLayout")) {
+            val layout = body.optString("weekAgendaLayout").lowercase()
+            require(layout in setOf("list", "timegrid")) {
+                "weekAgendaLayout must be list or timegrid"
+            }
+            config.wallWeekAgendaLayout = layout
+        }
+        if (body.has("timeGridStart") || body.has("timeGridEnd")) {
+            val start = body.optInt("timeGridStart", config.wallTimeGridStart)
+            val end = body.optInt("timeGridEnd", config.wallTimeGridEnd)
+            require(start in 0..23 && end in 1..24 && end > start) {
+                "timeGridEnd must be after timeGridStart and within a 24-hour day"
+            }
+            config.wallTimeGridStart = start
+            config.wallTimeGridEnd = end
         }
         if (body.has("weatherZip")) config.weatherZip = cleanText(body.optString("weatherZip"), 16)
         if (body.has("weatherLabel")) config.weatherLabel = cleanText(body.optString("weatherLabel"), 120)
