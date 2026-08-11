@@ -326,20 +326,35 @@
       const dayStart = startOfDay(day);
       const visibleStart = toSeconds(new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), startHour));
       const events = timedEventsForDay(day, startHour, endHour);
-      const laneEnds = [];
-      const positioned = events.map((item) => {
-        let lane = laneEnds.findIndex((end) => end <= item.start);
-        if (lane < 0) lane = laneEnds.length;
-        laneEnds[lane] = item.end;
-        return { item, lane };
+      const overlapGroups = [];
+      events.forEach((item) => {
+        const group = overlapGroups[overlapGroups.length - 1];
+        if (!group || item.start >= group.end) {
+          overlapGroups.push({ end: item.end, items: [item] });
+        } else {
+          group.end = Math.max(group.end, item.end);
+          group.items.push(item);
+        }
+      });
+      const positioned = [];
+      overlapGroups.forEach((group) => {
+        const laneEnds = [];
+        const groupPositioned = group.items.map((item) => {
+          let lane = laneEnds.findIndex((end) => end <= item.start);
+          if (lane < 0) lane = laneEnds.length;
+          laneEnds[lane] = item.end;
+          return { item, lane };
+        });
+        const laneCount = laneEnds.length;
+        groupPositioned.forEach((entry) => positioned.push({ ...entry, laneCount }));
       });
       const allDayEvents = eventsForDay(day).filter((event) => event.allDay);
-      return { allDayEvents, positioned, laneCount: laneEnds.length, visibleStart };
+      return { allDayEvents, positioned, visibleStart };
     });
     const maxAllDayCount = dayColumns.reduce((maximum, column) => Math.max(maximum, column.allDayEvents.length), 0);
     const allDayHeight = maxAllDayCount === 0 ? 36 : 16 + maxAllDayCount * 24 + Math.max(0, maxAllDayCount - 1) * 3;
-    const columns = dayColumns.map(({ allDayEvents, positioned, laneCount, visibleStart }) =>
-      `<div class="time-grid-column"><div class="time-grid-all-day">${allDayEvents.map(timeGridAllDayMarkup).join("")}</div><div class="time-grid-hours">${positioned.map(({ item, lane }) => timeGridEventMarkup(item, lane, laneCount, visibleStart)).join("")}</div></div>`
+    const columns = dayColumns.map(({ allDayEvents, positioned, visibleStart }) =>
+      `<div class="time-grid-column"><div class="time-grid-all-day">${allDayEvents.map(timeGridAllDayMarkup).join("")}</div><div class="time-grid-hours">${positioned.map(({ item, lane, laneCount }) => timeGridEventMarkup(item, lane, laneCount, visibleStart)).join("")}</div></div>`
     ).join("");
     const headers = days.map((day) => `<div class="time-grid-day-header"><span>${dayNames[day.getDay()]}</span><strong>${day.getDate()}</strong></div>`).join("");
     const target = mode === "week" ? $("weekView") : $("agendaView");

@@ -41,7 +41,7 @@ Install Android SDK/platform-tools and use the included Gradle wrapper:
 The debug APK is created at:
 
 ~~~text
-app/build/outputs/apk/foss/debug/calendar-27-foss-debug.apk
+app/build/outputs/apk/foss/debug/calendar-28-foss-debug.apk
 ~~~
 
 For a release build:
