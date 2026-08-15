@@ -11,6 +11,9 @@
     events: [],
     calendars: [],
     weather: null,
+    followToday: true,
+    todayKey: dateKey(new Date()),
+    loadId: 0,
     settings: {
       displayMode: "auto",
       adaptiveBrightness: true,
@@ -82,6 +85,7 @@
   function setStatus(text, error = false) { $("status").textContent = text; $("status").classList.toggle("error", error); }
 
   function moveDate(amount) {
+    state.followToday = false;
     if (state.view === "week") {
       state.date.setDate(state.date.getDate() + amount * 7);
     } else if (state.view === "monthday" || (state.view === "agenda" && state.settings.weekAgendaLayout === "timegrid")) {
@@ -145,40 +149,47 @@
   }
   window.applyWallSettings = applyWallSettings;
 
-  function rangeForView() {
-    if (state.view === "week") {
-      const start = startOfDay(state.date);
-      if (state.settings.weekStart !== "today") start.setDate(start.getDate() - start.getDay());
+  function rangeForView(date = state.date, view = state.view, settings = state.settings) {
+    if (view === "week") {
+      const start = startOfDay(date);
+      if (settings.weekStart !== "today") start.setDate(start.getDate() - start.getDay());
       const end = new Date(start); end.setDate(end.getDate() + 7);
       return { start, end };
     }
-    const first = new Date(state.date.getFullYear(), state.date.getMonth(), 1);
+    const first = new Date(date.getFullYear(), date.getMonth(), 1);
     const start = new Date(first); start.setDate(start.getDate() - start.getDay());
     const end = new Date(start); end.setDate(end.getDate() + 42);
     return { start, end };
   }
 
   async function load() {
+    const loadId = ++state.loadId;
     try {
-      const range = rangeForView();
-      const [calendars, events, status, settings, weather] = await Promise.all([
-        api("/api/calendars"),
-        api(`/api/events?start=${toSeconds(range.start)}&end=${toSeconds(range.end)}`),
-        api("/api/status"),
-        api("/api/settings"),
-        api("/api/weather")
-      ]);
-      state.calendars = calendars.calendars || [];
-      state.events = events.events || [];
-      state.weather = weather || null;
+      const settings = await api("/api/settings");
+      if (loadId !== state.loadId) return;
       state.settings = { ...state.settings, ...(settings || {}) };
       if (!state.defaultViewApplied) {
         state.view = isWallView(state.settings.defaultView) ? normalizeView(state.settings.defaultView) : "month";
         state.defaultViewApplied = true;
       }
+      const requestedDate = new Date(state.date);
+      const requestedView = state.view;
+      const requestedSettings = { ...state.settings };
+      const range = rangeForView(requestedDate, requestedView, requestedSettings);
+      const [calendars, events, status, weather] = await Promise.all([
+        api("/api/calendars"),
+        api(`/api/events?start=${toSeconds(range.start)}&end=${toSeconds(range.end)}`),
+        api("/api/status"),
+        api("/api/weather")
+      ]);
+      if (loadId !== state.loadId) return;
+      state.calendars = calendars.calendars || [];
+      state.events = events.events || [];
+      state.weather = weather || null;
       applyWallSettings(state.settings);
       render(status);
     } catch (error) {
+      if (loadId !== state.loadId) return;
       setStatus(error.message, true);
     }
   }
@@ -352,7 +363,7 @@
       return { allDayEvents, positioned, visibleStart };
     });
     const maxAllDayCount = dayColumns.reduce((maximum, column) => Math.max(maximum, column.allDayEvents.length), 0);
-    const allDayHeight = maxAllDayCount === 0 ? 36 : 16 + maxAllDayCount * 24 + Math.max(0, maxAllDayCount - 1) * 3;
+    const allDayHeight = maxAllDayCount === 0 ? 36 : 16 + maxAllDayCount * 28 + Math.max(0, maxAllDayCount - 1) * 3;
     const columns = dayColumns.map(({ allDayEvents, positioned, visibleStart }) =>
       `<div class="time-grid-column"><div class="time-grid-all-day">${allDayEvents.map(timeGridAllDayMarkup).join("")}</div><div class="time-grid-hours">${positioned.map(({ item, lane, laneCount }) => timeGridEventMarkup(item, lane, laneCount, visibleStart)).join("")}</div></div>`
     ).join("");
@@ -517,7 +528,11 @@
     document.querySelectorAll(".timed-fields").forEach((row) => row.classList.remove("hidden"));
     $("eventLocation").value = "";
     $("eventDescription").value = "";
+    $("eventSourceNote").textContent = "";
+    $("eventSourceNote").classList.add("hidden");
     $("deleteEvent").classList.add("hidden");
+    $("saveEvent").classList.remove("hidden");
+    ["eventTitle", "eventDate", "eventAllDay", "eventStart", "eventEnd", "eventCalendar", "eventLocation", "eventDescription"].forEach((id) => $(id).disabled = false);
     $("formError").textContent = "";
     $("eventCalendar").disabled = false;
     $("eventCalendar").value = editable[0].id;
@@ -526,12 +541,9 @@
 
   function openEvent(event) {
     const calendar = state.calendars.find((item) => Number(item.id) === Number(event.calendarId));
-    if (calendar?.readOnly || calendar?.synced) {
-      setStatus(`${calendar.title} is read-only; incoming calendar changes cannot be edited here.`, true);
-      return;
-    }
+    const readOnly = Boolean(calendar?.readOnly || calendar?.synced);
     $("eventId").value = event.id;
-    $("dialogTitle").textContent = event.repeatInterval ? "Edit repeating series" : "Edit event";
+    $("dialogTitle").textContent = readOnly ? "Event details" : event.repeatInterval ? "Edit repeating series" : "Edit event";
     const date = fromSeconds(event.start);
     $("eventTitle").value = event.title || "";
     $("eventDate").value = dateKey(date);
@@ -542,10 +554,21 @@
     document.querySelectorAll(".timed-fields").forEach((row) => row.classList.toggle("hidden", Boolean(event.allDay)));
     $("eventLocation").value = event.location || "";
     $("eventDescription").value = event.description || "";
+    const calendarSelect = $("eventCalendar");
+    if (![...calendarSelect.options].some((option) => String(option.value) === String(event.calendarId))) {
+      const option = document.createElement("option");
+      option.value = event.calendarId;
+      option.textContent = calendar?.title || "Calendar";
+      calendarSelect.append(option);
+    }
     $("eventCalendar").value = event.calendarId;
-    $("eventCalendar").disabled = false;
-    $("deleteEvent").classList.remove("hidden");
-    $("formError").textContent = event.repeatInterval ? "Saving edits updates the repeating series." : "";
+    $("eventSourceNote").textContent = readOnly ? `${calendar?.title || "This calendar"} is read-only; showing the incoming event details.` : "";
+    $("eventSourceNote").classList.toggle("hidden", !readOnly);
+    $("eventCalendar").disabled = readOnly;
+    $("deleteEvent").classList.toggle("hidden", readOnly);
+    $("saveEvent").classList.toggle("hidden", readOnly);
+    ["eventTitle", "eventDate", "eventAllDay", "eventStart", "eventEnd", "eventLocation", "eventDescription"].forEach((id) => $(id).disabled = readOnly);
+    $("formError").textContent = readOnly ? "" : event.repeatInterval ? "Saving edits updates the repeating series." : "";
     $("eventDialog").showModal();
   }
 
@@ -630,6 +653,10 @@
         })
       });
       state.settings = { ...state.settings, ...settings };
+      if ($("weekStart").value === "today" && state.view === "week") {
+        state.followToday = true;
+        state.date = new Date();
+      }
       if (isWallView(settings.defaultView)) {
         state.view = normalizeView(settings.defaultView);
         state.defaultViewApplied = true;
@@ -692,7 +719,7 @@
 
   $("prev").addEventListener("click", () => { moveDate(-1); load(); });
   $("next").addEventListener("click", () => { moveDate(1); load(); });
-  $("today").addEventListener("click", () => { state.date = new Date(); load(); });
+  $("today").addEventListener("click", () => { state.date = new Date(); state.followToday = true; load(); });
   $("newEvent").addEventListener("click", () => openNewEvent());
   $("closeDialog").addEventListener("click", () => $("eventDialog").close());
   $("cancelEvent").addEventListener("click", () => $("eventDialog").close());
@@ -719,8 +746,23 @@
     try { await api("/api/exit-wall-mode", { method: "POST" }); }
     catch (error) { setStatus(error.message, true); }
   });
-  document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => { state.view = button.dataset.view; load(); }));
-  setInterval(() => { $("clock").textContent = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "short" }).format(new Date()); }, 1000);
+  document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => {
+    state.view = button.dataset.view;
+    if (state.view === "week" && state.settings.weekStart === "today" && state.followToday) state.date = new Date();
+    load();
+  }));
+  setInterval(() => {
+    const now = new Date();
+    $("clock").textContent = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "short" }).format(now);
+    const todayKey = dateKey(now);
+    if (todayKey !== state.todayKey) {
+      state.todayKey = todayKey;
+      if (state.followToday) {
+        state.date = startOfDay(now);
+        load();
+      }
+    }
+  }, 1000);
   setInterval(load, 15000);
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
   load();

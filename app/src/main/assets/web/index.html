@@ -75,6 +75,7 @@
         <label>Ends<input id="eventEnd" type="time" required></label>
       </div>
       <label>Calendar<select id="eventCalendar"></select></label>
+      <p id="eventSourceNote" class="settings-help hidden"></p>
       <label>Location<input id="eventLocation" maxlength="1000" autocomplete="off"></label>
       <label>Notes<textarea id="eventDescription" rows="3" maxlength="10000"></textarea></label>
       <div id="formError" class="form-error" role="alert"></div>
@@ -82,7 +83,7 @@
         <button type="button" id="deleteEvent" class="danger hidden">Delete</button>
         <span class="grow"></span>
         <button type="button" id="cancelEvent" class="secondary">Cancel</button>
-        <button type="submit" class="primary">Save event</button>
+        <button type="submit" id="saveEvent" class="primary">Save event</button>
       </div>
     </form>
   </dialog>
