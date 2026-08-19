@@ -13,3 +13,5 @@ fastlane/report.xml
 .kotlin/
 __pycache__/
 *.py[cod]
+*.apk
+*.idsig

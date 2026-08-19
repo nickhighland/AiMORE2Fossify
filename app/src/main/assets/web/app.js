@@ -4,6 +4,9 @@
   const isNativeWall = new URLSearchParams(window.location.search).get("client") === "app";
   document.body.classList.toggle("native-wall", isNativeWall);
 
+  const THEMES = ["midnight", "frost", "hearth", "botanical", "twilight", "minimal"];
+  const SHAPES = ["rounded", "pill", "sharp"];
+
   const state = {
     date: new Date(),
     view: "month",
@@ -16,6 +19,8 @@
     loadId: 0,
     settings: {
       displayMode: "auto",
+      theme: "midnight",
+      shape: "rounded",
       adaptiveBrightness: true,
       orientation: "landscape",
       weekStart: "today",
@@ -31,6 +36,8 @@
   const monthFormatter = new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" });
   const dayFormatter = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   const timeFormatter = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+  const clockTimeFormatter = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+  const clockDateFormatter = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "short", day: "numeric" });
   const hourFormatter = new Intl.DateTimeFormat(undefined, { hour: "numeric" });
 
   function formatGridHour(hour) {
@@ -66,7 +73,7 @@
   }
   function color(value) {
     if (typeof value === "number") return `#${(value & 0xffffff).toString(16).padStart(6, "0")}`;
-    return value || "#75a4ff";
+    return value || "#3b82f6";
   }
   const COLOR_PALETTE = [
     "#ef4444", "#f97316", "#f59e0b", "#eab308", "#84cc16", "#22c55e", "#10b981", "#14b8a6",
@@ -82,7 +89,14 @@
     return normalized === "weekly" ? "week" : normalized;
   }
   function isWallView(value) { return ["month", "monthday", "week", "agenda"].includes(normalizeView(value)); }
-  function setStatus(text, error = false) { $("status").textContent = text; $("status").classList.toggle("error", error); }
+  
+  function setStatus(text, error = false) {
+    const statusEl = $("status");
+    if (!statusEl) return;
+    const textEl = statusEl.querySelector(".status-text") || statusEl;
+    textEl.textContent = text;
+    statusEl.classList.toggle("error", error);
+  }
 
   function moveDate(amount) {
     state.followToday = false;
@@ -116,10 +130,18 @@
     return body;
   }
 
-  function effectiveTheme(settings = state.settings) {
+  function effectiveMode(settings = state.settings) {
     if (settings.displayMode === "day" || settings.displayMode === "night") return settings.displayMode;
     const hour = new Date().getHours();
     return hour >= 7 && hour < 19 ? "day" : "night";
+  }
+
+  function effectiveTheme(settings = state.settings) {
+    return THEMES.includes(settings.theme) ? settings.theme : "midnight";
+  }
+
+  function effectiveShape(settings = state.settings) {
+    return SHAPES.includes(settings.shape) ? settings.shape : "rounded";
   }
 
   function applyWallSettings(settings) {
@@ -132,7 +154,16 @@
         && previousDefaultView !== normalizeView(state.settings.defaultView)) {
       state.view = normalizeView(state.settings.defaultView);
     }
-    document.body.dataset.theme = effectiveTheme(state.settings);
+
+    const currentTheme = effectiveTheme(state.settings);
+    const currentMode = effectiveMode(state.settings);
+    const currentShape = effectiveShape(state.settings);
+
+    document.body.dataset.theme = currentTheme;
+    document.body.dataset.mode = currentMode;
+    document.body.dataset.shape = currentShape;
+
+    // Sync settings form inputs if open/rendered
     if ($("displayMode")) {
       $("displayMode").value = state.settings.displayMode || "auto";
       $("wallOrientation").value = state.settings.orientation || "landscape";
@@ -144,7 +175,20 @@
       $("weekAgendaLayout").value = state.settings.weekAgendaLayout === "timegrid" ? "timegrid" : "list";
       $("timeGridStart").value = String(Number.isFinite(Number(state.settings.timeGridStart)) ? state.settings.timeGridStart : 7);
       $("timeGridEnd").value = String(Number.isFinite(Number(state.settings.timeGridEnd)) ? state.settings.timeGridEnd : 22);
+      
+      const themeChoiceInput = $("wallThemeChoice");
+      if (themeChoiceInput) themeChoiceInput.value = currentTheme;
+      document.querySelectorAll("[data-theme-choice]").forEach((card) => {
+        card.classList.toggle("active", card.dataset.themeChoice === currentTheme);
+      });
+
+      const shapeChoiceInput = $("wallShapeChoice");
+      if (shapeChoiceInput) shapeChoiceInput.value = currentShape;
+      document.querySelectorAll("[data-shape-choice]").forEach((card) => {
+        card.classList.toggle("active", card.dataset.shapeChoice === currentShape);
+      });
     }
+
     if ($("calendarGrid")) render();
   }
   window.applyWallSettings = applyWallSettings;
@@ -194,29 +238,50 @@
     }
   }
 
+  function updateClock() {
+    const now = new Date();
+    const clockTime = $("clockTime");
+    const clockDate = $("clockDate");
+    if (clockTime) clockTime.textContent = clockTimeFormatter.format(now);
+    if (clockDate) clockDate.textContent = clockDateFormatter.format(now);
+  }
+
   function render(status) {
     const range = rangeForView();
     $("monthTitle").textContent = state.view === "week"
       ? `Week of ${dayFormatter.format(range.start)}`
-      : state.view === "agenda" && state.settings.weekAgendaLayout === "timegrid"
+      : state.view === "monthday" && state.settings.weekAgendaLayout === "timegrid"
         ? `Agenda · ${dayFormatter.format(state.date)}`
         : state.view === "agenda" ? "Agenda" : monthFormatter.format(state.date);
-    $("clock").textContent = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "short" }).format(new Date());
+    
+    updateClock();
+
     if (status) {
       const version = status.version ? "v" + status.version + " · " : "";
-      $("status").textContent = status.addresses?.length ? version + "Local web interface · " + status.addresses.map((ip) => "http://" + ip + ":" + status.port).join(" · ") : version + "Local web interface · Wi-Fi address unavailable";
-      $("status").classList.remove("error");
+      const text = status.addresses?.length
+        ? version + "LAN: " + status.addresses.map((ip) => "http://" + ip + ":" + status.port).join(" · ")
+        : version + "Wi-Fi address unavailable";
+      setStatus(text, false);
     }
-    document.body.dataset.theme = effectiveTheme(state.settings);
+
+    const currentTheme = effectiveTheme(state.settings);
+    const currentMode = effectiveMode(state.settings);
+    const currentShape = effectiveShape(state.settings);
+    document.body.dataset.theme = currentTheme;
+    document.body.dataset.mode = currentMode;
+    document.body.dataset.shape = currentShape;
+
     updateNavigationLabels();
     document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === state.view));
     $("calendarGrid").classList.toggle("hidden", state.view !== "month");
     $("monthDayView").classList.toggle("hidden", state.view !== "monthday");
     $("weekView").classList.toggle("hidden", state.view !== "week");
     $("agendaView").classList.toggle("hidden", state.view !== "agenda");
+    
     renderCalendars();
     $("newEvent").classList.toggle("hidden", !state.calendars.some((calendar) => calendar.visible && !calendar.synced && !calendar.readOnly));
     renderWeather();
+    
     if (state.view === "month") renderMonth();
     if (state.view === "monthday") renderMonthDay();
     if (state.view === "week") {
@@ -231,15 +296,18 @@
     const key = dateKey(date);
     return state.events.filter((event) => dateKey(fromSeconds(event.start)) === key || (event.start < toSeconds(startOfDay(date)) && event.end > toSeconds(startOfDay(date))));
   }
+
   function eventColor(event) {
     const calendar = state.calendars.find((item) => Number(item.id) === Number(event.calendarId));
     return color(calendar?.color ?? event.color);
   }
+
   function eventChip(event) {
     const date = fromSeconds(event.start);
     const time = event.allDay ? "All day" : timeFormatter.format(date);
     return `<button class="event-chip" style="--event-color:${eventColor(event)}" data-event-id="${event.id}" data-occurrence="${event.start}"><span class="event-title">${escapeHtml(event.title)}</span><span class="event-time">${escapeHtml(time)}</span></button>`;
   }
+
   function attachEventClicks(root) {
     root.querySelectorAll("[data-event-id]").forEach((button) => button.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -255,7 +323,7 @@
       const day = new Date(range.start); day.setDate(day.getDate() + index);
       const events = eventsForDay(day);
       const isToday = dateKey(day) === dateKey(new Date());
-      html += `<div class="day-cell ${day.getMonth() !== state.date.getMonth() ? "other-month" : ""} ${isToday ? "today" : ""}" data-date="${dateKey(day)}"><div class="day-number">${day.getDate()}</div><div class="day-events">${events.slice(0, 6).map(eventChip).join("")}${events.length > 6 ? `<span class="more">+${events.length - 6} more</span>` : ""}</div></div>`;
+      html += `<div class="day-cell ${day.getMonth() !== state.date.getMonth() ? "other-month" : ""} ${isToday ? "today" : ""}" data-date="${dateKey(day)}"><div class="day-number">${day.getDate()}</div><div class="day-events">${events.slice(0, 5).map(eventChip).join("")}${events.length > 5 ? `<span class="more">+${events.length - 5} more</span>` : ""}</div></div>`;
     }
     $("calendarGrid").innerHTML = html;
     $("calendarGrid").querySelectorAll(".day-cell").forEach((cell) => cell.addEventListener("dblclick", () => openNewEvent(new Date(`${cell.dataset.date}T00:00:00`))));
@@ -275,7 +343,7 @@
     $("monthDayMonth").innerHTML = `<div class="month-day-grid">${monthHtml}</div>`;
     const selectedDate = startOfDay(state.date);
     const selectedEvents = eventsForDay(selectedDate);
-    $("monthDayAgenda").innerHTML = `<div class="month-day-heading"><div class="eyebrow">DAY</div><h2>${escapeHtml(dayFormatter.format(selectedDate))}</h2><button type="button" class="primary month-day-add" id="monthDayAdd">＋ Add event</button></div><div class="month-day-events">${selectedEvents.map(eventChip).join("") || "<p class=\"local-note\">No events for this day.</p>"}</div>`;
+    $("monthDayAgenda").innerHTML = `<div class="month-day-heading"><div class="eyebrow">SELECTED DAY</div><h2>${escapeHtml(dayFormatter.format(selectedDate))}</h2><button type="button" class="primary month-day-add" id="monthDayAdd">＋ Add event</button></div><div class="month-day-events">${selectedEvents.map(eventChip).join("") || "<p class=\"settings-help\">No events scheduled for this day.</p>"}</div>`;
     $("monthDayMonth").querySelectorAll("[data-monthday-date]").forEach((cell) => cell.addEventListener("click", () => {
       state.date = new Date(`${cell.dataset.monthdayDate}T00:00:00`);
       load();
@@ -285,7 +353,7 @@
     attachEventClicks($("monthDayAgenda"));
   }
 
-  const TIME_GRID_HOUR_HEIGHT = 72;
+  const TIME_GRID_HOUR_HEIGHT = 76;
 
   function timeGridSettings() {
     const requestedStart = Number(state.settings.timeGridStart);
@@ -315,7 +383,7 @@
     const height = Math.max(32, ((item.end - item.start) / 3600) * TIME_GRID_HOUR_HEIGHT - 4);
     const event = item.event;
     const time = event.allDay ? "All day" : `${timeFormatter.format(fromSeconds(item.start))}–${timeFormatter.format(fromSeconds(item.end))}`;
-    return `<button class="time-grid-event" style="--event-color:${eventColor(event)};--event-top:${top}px;--event-height:${height}px;--event-left:${lane * (100 / laneCount)}%;--event-width:calc(${100 / laneCount}% - 4px)" data-event-id="${event.id}" data-occurrence="${event.start}"><span class="time-grid-event-title">${escapeHtml(event.title)}</span><span class="time-grid-event-time">${escapeHtml(time)}</span>${event.location ? `<span class="time-grid-event-location">${escapeHtml(event.location)}</span>` : ""}</button>`;
+    return `<button class="time-grid-event" style="--event-color:${eventColor(event)};--event-top:${top}px;--event-height:${height}px;--event-left:${lane * (100 / laneCount)}%;--event-width:calc(${100 / laneCount}% - 4px)" data-event-id="${event.id}" data-occurrence="${event.start}"><span class="time-grid-event-title">${escapeHtml(event.title)}</span><span class="time-grid-event-time">${escapeHtml(time)}</span>${event.location ? `<span class="time-grid-event-location">📍 ${escapeHtml(event.location)}</span>` : ""}</button>`;
   }
 
   function timeGridAllDayMarkup(event) {
@@ -333,8 +401,15 @@
       })
       : [startOfDay(state.date)];
     const hourLabels = Array.from({ length: endHour - startHour }, (_, index) => `<div class="time-grid-hour-label">${formatGridHour(startHour + index)}</div>`).join("");
+    
+    const now = new Date();
+    const currentHourDecimal = now.getHours() + now.getMinutes() / 60;
+    const isCurrentTimeVisible = currentHourDecimal >= startHour && currentHourDecimal <= endHour;
+    const currentTimeTop = (currentHourDecimal - startHour) * TIME_GRID_HOUR_HEIGHT;
+
     const dayColumns = days.map((day) => {
       const dayStart = startOfDay(day);
+      const isToday = dateKey(day) === dateKey(now);
       const visibleStart = toSeconds(new Date(dayStart.getFullYear(), dayStart.getMonth(), dayStart.getDate(), startHour));
       const events = timedEventsForDay(day, startHour, endHour);
       const overlapGroups = [];
@@ -360,14 +435,24 @@
         groupPositioned.forEach((entry) => positioned.push({ ...entry, laneCount }));
       });
       const allDayEvents = eventsForDay(day).filter((event) => event.allDay);
-      return { allDayEvents, positioned, visibleStart };
+      return { day, isToday, allDayEvents, positioned, visibleStart };
     });
+
     const maxAllDayCount = dayColumns.reduce((maximum, column) => Math.max(maximum, column.allDayEvents.length), 0);
-    const allDayHeight = maxAllDayCount === 0 ? 36 : 16 + maxAllDayCount * 28 + Math.max(0, maxAllDayCount - 1) * 3;
-    const columns = dayColumns.map(({ allDayEvents, positioned, visibleStart }) =>
-      `<div class="time-grid-column"><div class="time-grid-all-day">${allDayEvents.map(timeGridAllDayMarkup).join("")}</div><div class="time-grid-hours">${positioned.map(({ item, lane, laneCount }) => timeGridEventMarkup(item, lane, laneCount, visibleStart)).join("")}</div></div>`
-    ).join("");
-    const headers = days.map((day) => `<div class="time-grid-day-header"><span>${dayNames[day.getDay()]}</span><strong>${day.getDate()}</strong></div>`).join("");
+    const allDayHeight = maxAllDayCount === 0 ? 40 : 16 + maxAllDayCount * 28 + Math.max(0, maxAllDayCount - 1) * 4;
+
+    const columns = dayColumns.map(({ isToday, allDayEvents, positioned, visibleStart }) => {
+      const currentTimeIndicator = (isToday && isCurrentTimeVisible)
+        ? `<div class="current-time-line" style="top:${currentTimeTop}px" title="Current Time"></div>`
+        : "";
+      return `<div class="time-grid-column ${isToday ? "today" : ""}"><div class="time-grid-all-day">${allDayEvents.map(timeGridAllDayMarkup).join("")}</div><div class="time-grid-hours">${currentTimeIndicator}${positioned.map(({ item, lane, laneCount }) => timeGridEventMarkup(item, lane, laneCount, visibleStart)).join("")}</div></div>`;
+    }).join("");
+
+    const headers = days.map((day) => {
+      const isToday = dateKey(day) === dateKey(now);
+      return `<div class="time-grid-day-header ${isToday ? "today" : ""}"><span>${dayNames[day.getDay()]}</span><strong>${day.getDate()}</strong></div>`;
+    }).join("");
+
     const target = mode === "week" ? $("weekView") : $("agendaView");
     target.classList.add("time-grid-host");
     target.innerHTML = `<div class="time-grid time-grid-${mode}" style="--grid-hours:${endHour - startHour};--grid-days:${days.length};--time-grid-all-day-height:${allDayHeight}px"><div class="time-grid-header"><div class="time-grid-corner"></div>${headers}</div><div class="time-grid-body"><div class="time-grid-label-column"><div class="time-grid-all-day-label">All day</div><div class="time-grid-hour-labels">${hourLabels}</div></div>${columns}</div></div>`;
@@ -381,7 +466,8 @@
     for (let index = 0; index < 7; index += 1) {
       const day = new Date(range.start); day.setDate(day.getDate() + index);
       const events = eventsForDay(day);
-      html += `<div class="week-column"><div class="week-column-header">${dayNames[day.getDay()]}<strong>${day.getDate()}</strong></div><div class="week-events">${events.map(eventChip).join("") || "<span class=\"muted\">No events</span>"}</div></div>`;
+      const isToday = dateKey(day) === dateKey(new Date());
+      html += `<div class="week-column ${isToday ? "today" : ""}"><div class="week-column-header">${dayNames[day.getDay()]}<strong>${day.getDate()}</strong></div><div class="week-events">${events.map(eventChip).join("") || "<span class=\"settings-help\">No events</span>"}</div></div>`;
     }
     $("weekView").innerHTML = html;
     attachEventClicks($("weekView"));
@@ -396,9 +482,9 @@
     });
     const html = Object.entries(days).map(([key, events]) => {
       const date = new Date(`${key}T00:00:00`);
-      return `<div class="agenda-day"><h3>${escapeHtml(dayFormatter.format(date))}</h3>${events.map((event) => `<button class="agenda-event" style="--event-color:${eventColor(event)}" data-event-id="${event.id}" data-occurrence="${event.start}"><span class="agenda-event-time">${event.allDay ? "All day" : escapeHtml(timeFormatter.format(fromSeconds(event.start)))}</span><span><span class="agenda-event-title">${escapeHtml(event.title)}</span>${event.location ? `<span class="agenda-event-meta">${escapeHtml(event.location)}</span>` : ""}</span></button>`).join("")}</div>`;
+      return `<div class="agenda-day"><h3><span>✦</span> ${escapeHtml(dayFormatter.format(date))}</h3>${events.map((event) => `<button class="agenda-event" style="--event-color:${eventColor(event)}" data-event-id="${event.id}" data-occurrence="${event.start}"><span class="agenda-event-time">${event.allDay ? "All day" : escapeHtml(timeFormatter.format(fromSeconds(event.start)))}</span><span><span class="agenda-event-title">${escapeHtml(event.title)}</span>${event.location ? `<span class="agenda-event-meta">📍 ${escapeHtml(event.location)}</span>` : ""}</span></button>`).join("")}</div>`;
     }).join("");
-    $("agendaView").innerHTML = html || `<p class="local-note">No events in this range.</p>`;
+    $("agendaView").innerHTML = html || `<p class="settings-help">No events in this range.</p>`;
     attachEventClicks($("agendaView"));
   }
 
@@ -415,40 +501,57 @@
       : state.calendars;
     $("calendarList").innerHTML = sidebarCalendars.map((calendar) => {
       const syncButton = calendar.syncMode === "ics_url"
-        ? `<button class="calendar-sync" data-sync-calendar-id="${calendar.id}" title="Sync now">↻</button>` : "";
+        ? `<button class="calendar-sync" data-sync-calendar-id="${calendar.id}" title="Sync now" aria-label="Sync now">↻</button>` : "";
       const deleteButton = Number(calendar.id) !== 1 && !calendar.synced
-        ? `<button class="calendar-delete" data-delete-calendar-id="${calendar.id}" title="Delete calendar">×</button>` : "";
+        ? `<button class="calendar-delete" data-delete-calendar-id="${calendar.id}" title="Delete calendar" aria-label="Delete calendar">×</button>` : "";
       const labelTitle = calendar.lastSyncError || calendar.title;
-      return `<div class="calendar-row"><input type="checkbox" data-calendar-id="${calendar.id}" ${calendar.visible ? "checked" : ""} ${calendar.synced ? "disabled" : ""}><div class="calendar-color-picker"><button type="button" class="calendar-color-button" data-color-toggle="${calendar.id}" style="--calendar-color:${color(calendar.color)}" title="Choose ${escapeHtml(calendar.title)} color" aria-label="Choose ${escapeHtml(calendar.title)} color"></button><div class="color-palette" data-calendar-palette="${calendar.id}">${paletteMarkup(calendar.color, `data-calendar-palette-color-id="${calendar.id}"`)}<input type="color" class="color-palette-custom" data-calendar-custom-color-id="${calendar.id}" value="${color(calendar.color)}" title="Custom color"></div></div><label title="${escapeHtml(labelTitle)}">${escapeHtml(calendar.title)} ${calendarBadge(calendar)}</label>${syncButton}${deleteButton}</div>`;
-    }).join("") || `<span class="local-note">No calendars yet.</span>`;
+      return `<div class="calendar-row"><input type="checkbox" data-calendar-id="${calendar.id}" ${calendar.visible ? "checked" : ""} ${calendar.synced ? "disabled" : ""} aria-label="Toggle ${escapeHtml(calendar.title)}"><div class="calendar-color-picker"><button type="button" class="calendar-color-button" data-color-toggle="${calendar.id}" style="--calendar-color:${color(calendar.color)}" title="Choose ${escapeHtml(calendar.title)} color" aria-label="Choose ${escapeHtml(calendar.title)} color"></button><div class="color-palette" data-calendar-palette="${calendar.id}">${paletteMarkup(calendar.color, `data-calendar-palette-color-id="${calendar.id}"`)}<input type="color" class="color-palette-custom" data-calendar-custom-color-id="${calendar.id}" value="${color(calendar.color)}" title="Custom color"></div></div><label title="${escapeHtml(labelTitle)}">${escapeHtml(calendar.title)} ${calendarBadge(calendar)}</label>${syncButton}${deleteButton}</div>`;
+    }).join("") || `<span class="settings-help">No calendars found.</span>`;
+    
     $("eventCalendar").innerHTML = state.calendars.filter((calendar) => !calendar.synced && !calendar.readOnly).map((calendar) => `<option value="${calendar.id}">${escapeHtml(calendar.title)}</option>`).join("");
+    
     $("calendarList").querySelectorAll("input[data-calendar-id]").forEach((checkbox) => checkbox.addEventListener("change", async () => {
       try { await api(`/api/calendars/${checkbox.dataset.calendarId}`, { method: "PUT", body: JSON.stringify({ visible: checkbox.checked }) }); await load(); }
       catch (error) { setStatus(error.message, true); }
     }));
+    
     $("calendarList").querySelectorAll("[data-color-toggle]").forEach((button) => button.addEventListener("click", (event) => {
       event.stopPropagation();
       const palette = $("calendarList").querySelector(`[data-calendar-palette="${button.dataset.colorToggle}"]`);
       document.querySelectorAll(".color-palette.open").forEach((item) => item.classList.remove("open"));
       palette?.classList.toggle("open");
     }));
+    
     const updateCalendarColor = async (control, value) => {
       try { await api(`/api/calendars/${control.dataset.calendarPaletteColorId || control.dataset.calendarCustomColorId}`, { method: "PUT", body: JSON.stringify({ color: value }) }); await load(); }
       catch (error) { setStatus(error.message, true); }
     };
+    
     $("calendarList").querySelectorAll("[data-calendar-palette-color-id]").forEach((swatch) => swatch.addEventListener("click", async (event) => {
       event.stopPropagation();
       await updateCalendarColor(swatch, swatch.dataset.colorValue);
     }));
+    
     $("calendarList").querySelectorAll("[data-calendar-custom-color-id]").forEach((picker) => picker.addEventListener("change", async (event) => {
       event.stopPropagation();
       await updateCalendarColor(picker, picker.value);
     }));
+    
     $("calendarList").querySelectorAll("[data-sync-calendar-id]").forEach((button) => button.addEventListener("click", async () => {
       button.disabled = true;
-      try { setStatus("Syncing ICS calendar…"); await api(`/api/calendars/${button.dataset.syncCalendarId}/sync`, { method: "POST" }); await load(); }
-      catch (error) { setStatus(error.message, true); button.disabled = false; }
+      button.classList.add("spinning");
+      try {
+        setStatus("Syncing ICS calendar…");
+        await api(`/api/calendars/${button.dataset.syncCalendarId}/sync`, { method: "POST" });
+        await load();
+      } catch (error) {
+        setStatus(error.message, true);
+      } finally {
+        button.disabled = false;
+        button.classList.remove("spinning");
+      }
     }));
+    
     $("calendarList").querySelectorAll("[data-delete-calendar-id]").forEach((button) => button.addEventListener("click", async () => {
       const calendar = state.calendars.find((item) => String(item.id) === button.dataset.deleteCalendarId);
       if (!calendar || !confirm(`Delete “${calendar.title}” and all of its events? This cannot be undone.`)) return;
@@ -468,7 +571,7 @@
     if (value === 45 || value === 48) return "≋";
     if (value >= 71 && value <= 77 || value >= 85 && value <= 86) return "❄";
     if (value >= 95) return "⚡";
-    if (value >= 51 && value <= 67 || value >= 80 && value <= 82) return "☂";
+    if (value >= 51 && value <= 67 || value >= 80 && value <= 82) return "🌧";
     return "☁";
   }
 
@@ -480,36 +583,51 @@
   function renderWeather() {
     const widget = $("weatherWidget");
     const weather = state.weather;
-    widget.classList.remove("hidden");
+    const headerBadge = $("headerWeatherBadge");
+    
+    if (widget) widget.classList.remove("hidden");
+    
     if (!weather || weather.configured === false) {
-      widget.innerHTML = `<div class="weather-unconfigured"><strong>Weather</strong>Set a ZIP code and label in Settings to add local weather.</div>`;
+      if (widget) widget.innerHTML = `<div class="weather-unconfigured"><strong>Weather Station</strong>Set a ZIP code and location label in Settings to view live weather.</div>`;
+      if (headerBadge) headerBadge.classList.add("hidden");
       return;
     }
+    
     if (weather.error) {
-      widget.innerHTML = `<div class="weather-error"><strong>${escapeHtml(weather.label || "Weather")}</strong>${escapeHtml(weather.error)}</div>`;
+      if (widget) widget.innerHTML = `<div class="weather-error"><strong>${escapeHtml(weather.label || "Weather")}</strong>${escapeHtml(weather.error)}</div>`;
+      if (headerBadge) headerBadge.classList.add("hidden");
       return;
     }
+    
     const current = weather.current || {};
     const today = weather.today || {};
     const air = weather.airQuality || {};
     const aqiValue = air.aqi === null || air.aqi === undefined ? "—" : `${Math.round(Number(air.aqi))} · ${escapeHtml(air.label || "")}`;
     const aqiClass = String(air.label || "").toLowerCase() === "good" ? " good" : "";
     const forecast = Array.isArray(weather.forecast) ? weather.forecast : [];
-    widget.innerHTML = `
-      <div class="weather-current">
-        <div class="weather-place"><span class="weather-pin">⌖</span><span class="weather-location">${escapeHtml(weather.label || weather.locationName || weather.zip)}</span></div>
-        <div class="weather-main"><div class="weather-icon" aria-hidden="true">${weatherGlyph(current.weatherCode)}</div><div class="weather-temperature">${weatherNumber(current.temperature, "°F")}</div></div>
-        <div class="weather-condition">${escapeHtml(current.condition || "Weather")}</div>
-      </div>
-      <div class="weather-rows">
-        <div class="weather-row"><span class="weather-row-icon">♨</span><span class="weather-row-label">High / Low</span><span class="weather-row-value">${weatherNumber(today.high)} / ${weatherNumber(today.low)}</span></div>
-        <div class="weather-row"><span class="weather-row-icon">💧</span><span class="weather-row-label">Precipitation</span><span class="weather-row-value">${weatherNumber(current.precipitation, "%")}</span></div>
-        <div class="weather-row"><span class="weather-row-icon">◌</span><span class="weather-row-label">Humidity</span><span class="weather-row-value">${weatherNumber(current.humidity, "%")}</span></div>
-        <div class="weather-row"><span class="weather-row-icon">◉</span><span class="weather-row-label">Air quality</span><span class="weather-row-value${aqiClass}">${aqiValue}</span></div>
-        <div class="weather-row"><span class="weather-row-icon">☀</span><span class="weather-row-label">Sunrise / Sunset</span><span class="weather-row-value">${escapeHtml(today.sunrise || "—")} / ${escapeHtml(today.sunset || "—")}</span></div>
-        <div class="weather-row"><span class="weather-row-icon">≋</span><span class="weather-row-label">Wind</span><span class="weather-row-value">${escapeHtml(current.windDirection || "—")} ${weatherNumber(current.windSpeed, " mph")}</span></div>
-      </div>
-      <div class="weather-forecast">${forecast.map((day) => `<div class="weather-day"><div class="weather-day-name">${escapeHtml(day.date || "—")}</div><div class="weather-day-icon" aria-hidden="true">${weatherGlyph(day.weatherCode)}</div><div class="weather-day-high">${weatherNumber(day.high)}</div><div class="weather-day-low">${weatherNumber(day.low)}</div><div class="weather-day-rain">💧 ${weatherNumber(day.precipitation, "%")}</div></div>`).join("")}</div>`;
+    
+    if (headerBadge && current.temperature !== undefined) {
+      headerBadge.textContent = `${weatherGlyph(current.weatherCode)} ${weatherNumber(current.temperature, "°F")}`;
+      headerBadge.classList.remove("hidden");
+    }
+
+    if (widget) {
+      widget.innerHTML = `
+        <div class="weather-current">
+          <div class="weather-place"><span class="weather-pin">📍</span><span class="weather-location">${escapeHtml(weather.label || weather.locationName || weather.zip)}</span></div>
+          <div class="weather-main"><div class="weather-icon" aria-hidden="true">${weatherGlyph(current.weatherCode)}</div><div class="weather-temperature">${weatherNumber(current.temperature, "°F")}</div></div>
+          <div class="weather-condition">${escapeHtml(current.condition || "Weather")}</div>
+        </div>
+        <div class="weather-rows">
+          <div class="weather-row"><span class="weather-row-icon">🌡</span><span class="weather-row-label">High / Low</span><span class="weather-row-value">${weatherNumber(today.high)} / ${weatherNumber(today.low)}</span></div>
+          <div class="weather-row"><span class="weather-row-icon">💧</span><span class="weather-row-label">Precipitation</span><span class="weather-row-value">${weatherNumber(current.precipitation, "%")}</span></div>
+          <div class="weather-row"><span class="weather-row-icon">💨</span><span class="weather-row-label">Humidity</span><span class="weather-row-value">${weatherNumber(current.humidity, "%")}</span></div>
+          <div class="weather-row"><span class="weather-row-icon">🍃</span><span class="weather-row-label">Air quality</span><span class="weather-row-value${aqiClass}">${aqiValue}</span></div>
+          <div class="weather-row"><span class="weather-row-icon">🌅</span><span class="weather-row-label">Sun</span><span class="weather-row-value">${escapeHtml(today.sunrise || "—")} / ${escapeHtml(today.sunset || "—")}</span></div>
+          <div class="weather-row"><span class="weather-row-icon">🌬</span><span class="weather-row-label">Wind</span><span class="weather-row-value">${escapeHtml(current.windDirection || "—")} ${weatherNumber(current.windSpeed, " mph")}</span></div>
+        </div>
+        <div class="weather-forecast">${forecast.map((day) => `<div class="weather-day"><div class="weather-day-name">${escapeHtml(day.date || "—")}</div><div class="weather-day-icon" aria-hidden="true">${weatherGlyph(day.weatherCode)}</div><div class="weather-day-high">${weatherNumber(day.high)}</div><div class="weather-day-low">${weatherNumber(day.low)}</div><div class="weather-day-rain">💧 ${weatherNumber(day.precipitation, "%")}</div></div>`).join("")}</div>`;
+    }
   }
 
   function openNewEvent(date = state.date) {
@@ -602,6 +720,19 @@
     $("timeGridEnd").value = String(Number.isFinite(Number(state.settings.timeGridEnd)) ? state.settings.timeGridEnd : 22);
     $("weatherZip").value = state.settings.weatherZip || "";
     $("weatherLabel").value = state.settings.weatherLabel || "";
+    
+    const themeChoice = effectiveTheme(state.settings);
+    $("wallThemeChoice").value = themeChoice;
+    document.querySelectorAll("[data-theme-choice]").forEach((card) => {
+      card.classList.toggle("active", card.dataset.themeChoice === themeChoice);
+    });
+
+    const shapeChoice = effectiveShape(state.settings);
+    $("wallShapeChoice").value = shapeChoice;
+    document.querySelectorAll("[data-shape-choice]").forEach((card) => {
+      card.classList.toggle("active", card.dataset.shapeChoice === shapeChoice);
+    });
+
     $("settingsError").textContent = "";
     $("updateStatus").textContent = "";
     $("updateStatus").classList.remove("error");
@@ -610,7 +741,7 @@
 
   function openCalendarDialog(focusFile = false) {
     $("sourceTitle").value = "";
-    $("sourceColor").value = COLOR_PALETTE[state.calendars.length % COLOR_PALETTE.length] || "#4f7cff";
+    $("sourceColor").value = COLOR_PALETTE[state.calendars.length % COLOR_PALETTE.length] || "#3b82f6";
     $("sourceColorCustom").value = $("sourceColor").value;
     renderSourceColorPalette();
     $("sourceFile").value = "";
@@ -639,6 +770,8 @@
         method: "PUT",
         body: JSON.stringify({
           displayMode: $("displayMode").value,
+          theme: $("wallThemeChoice").value,
+          shape: $("wallShapeChoice").value,
           orientation: $("wallOrientation").value,
           adaptiveBrightness: $("adaptiveBrightness").checked,
           weekStart: $("weekStart").value,
@@ -704,7 +837,7 @@
       return;
     }
     const form = new FormData();
-    form.append("title", title === "New calendar" ? (file ? file.name.replace(/\\.ics$/i, "") : "Imported calendar") : title);
+    form.append("title", title === "New calendar" ? (file ? file.name.replace(/\.ics$/i, "") : "Imported calendar") : title);
     form.append("color", $("sourceColor").value);
     form.append("mode", $("sourceMode").value);
     if (url) form.append("url", url);
@@ -716,6 +849,41 @@
       await load();
     } catch (error) { $("calendarError").textContent = error.message; }
   }
+
+  // Setup Theme Picker in Settings (Live Preview on click)
+  document.querySelectorAll("[data-theme-choice]").forEach((card) => {
+    card.addEventListener("click", () => {
+      document.querySelectorAll("[data-theme-choice]").forEach((c) => c.classList.remove("active"));
+      card.classList.add("active");
+      const chosenTheme = card.dataset.themeChoice;
+      $("wallThemeChoice").value = chosenTheme;
+      document.body.dataset.theme = chosenTheme;
+    });
+  });
+
+  // Setup Shape Picker in Settings (Live Preview on click)
+  document.querySelectorAll("[data-shape-choice]").forEach((card) => {
+    card.addEventListener("click", () => {
+      document.querySelectorAll("[data-shape-choice]").forEach((c) => c.classList.remove("active"));
+      card.classList.add("active");
+      const chosenShape = card.dataset.shapeChoice;
+      $("wallShapeChoice").value = chosenShape;
+      document.body.dataset.shape = chosenShape;
+    });
+  });
+
+  // Quick theme switcher button in header
+  $("themeButton")?.addEventListener("click", async () => {
+    const currentIndex = THEMES.indexOf(effectiveTheme(state.settings));
+    const nextTheme = THEMES[(currentIndex + 1) % THEMES.length];
+    state.settings.theme = nextTheme;
+    applyWallSettings(state.settings);
+    try {
+      await api("/api/settings", { method: "PUT", body: JSON.stringify({ theme: nextTheme }) });
+    } catch (_) {
+      // Ignored for offline quick toggle
+    }
+  });
 
   $("prev").addEventListener("click", () => { moveDate(-1); load(); });
   $("next").addEventListener("click", () => { moveDate(1); load(); });
@@ -729,8 +897,15 @@
   $("addCalendar").addEventListener("click", () => openCalendarDialog());
   $("settingsButton").addEventListener("click", openSettings);
   $("importCalendar").addEventListener("click", () => openCalendarDialog(true));
-  $("closeSettings").addEventListener("click", () => $("settingsDialog").close());
-  $("cancelSettings").addEventListener("click", () => $("settingsDialog").close());
+  $("closeSettings").addEventListener("click", () => {
+    // Revert un-saved live preview
+    applyWallSettings(state.settings);
+    $("settingsDialog").close();
+  });
+  $("cancelSettings").addEventListener("click", () => {
+    applyWallSettings(state.settings);
+    $("settingsDialog").close();
+  });
   $("saveSettings").addEventListener("click", saveSettings);
   $("checkForUpdates").addEventListener("click", checkForUpdates);
   $("closeCalendar").addEventListener("click", () => $("calendarDialog").close());
@@ -751,9 +926,10 @@
     if (state.view === "week" && state.settings.weekStart === "today" && state.followToday) state.date = new Date();
     load();
   }));
+
   setInterval(() => {
+    updateClock();
     const now = new Date();
-    $("clock").textContent = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "short" }).format(now);
     const todayKey = dateKey(now);
     if (todayKey !== state.todayKey) {
       state.todayKey = todayKey;
@@ -763,6 +939,7 @@
       }
     }
   }, 1000);
+  
   setInterval(load, 15000);
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
   load();

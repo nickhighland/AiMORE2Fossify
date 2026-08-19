@@ -6,16 +6,16 @@ This checkout is a customized Fossify Calendar for AiMOR digital calendars with 
 
 ```sh
 ./gradlew clean :app:assembleFossDebug
-adb -s <serial> install -r app/build/outputs/apk/foss/debug/calendar-29-foss-debug.apk
+adb -s <serial> install -r app/build/outputs/apk/foss/debug/calendar-30-foss-debug.apk
 ```
 
 The development package is `org.fossify.calendar.debug`. A signed release uses `org.fossify.calendar`; configure a production keystore before distributing it. The setup tool can install a supplied signed release APK.
 
-`app/build/outputs/apk/foss/debug/calendar-29-foss-debug.apk`
+`app/build/outputs/apk/foss/debug/calendar-30-foss-debug.apk`
 
 ## Use
 
-- Wall mode is the default launch surface and stays awake/fullscreen. Its web Settings menu supports exiting to the native calendar, the start-in-wall toggle, automatic/day/night themes, adaptive or fixed brightness, portrait/landscape/sensor orientation, and Today-or-Sunday week starts (Today is the default).
+- Wall mode is the default launch surface and stays awake/fullscreen. Its web Settings menu supports 6 curated themes (Midnight OLED, Nordic Frost, Warm Hearth, Emerald Forest, Sunset Dusk, Minimal Paper) with Day and Night modes, corner shape customization (Rounded Modern, Pill Soft, Sharp Minimal), exiting to the native calendar, the start-in-wall toggle, automatic/day/night display mode, adaptive or fixed brightness, portrait/landscape/sensor orientation, and Today-or-Sunday week starts (Today is the default).
 - The same UI is available from another device at `http://192.168.4.80:8080` while the calendar app process is running.
 - Settings → Wall calendar contains the start-in-wall toggle, port, LAN address/copy action, and Return to wall view.
 - The web UI supports month, month + day split, week, and agenda views; previous/next arrows move by month, day, or week as appropriate; event text is enlarged for wall readability; and Settings can switch Week and Agenda to an hourly time grid with configurable start/end hours. Week uses seven horizontally scrollable day columns, Agenda uses a single-day schedule, timed events are positioned within hourly blocks, and all-day events share one aligned row above the grid. The UI also provides 15-second polling; local calendar visibility/color/name management; calendar color pickers; an option to hide the built-in Local calendar from the sidebar; calendar deletion with confirmation (including its events/tasks); and event create/edit/delete. Event bars use their calendar's color in every view.

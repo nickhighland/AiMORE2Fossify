@@ -3,51 +3,78 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#0d1118">
+  <meta name="theme-color" content="#090d14">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Wall Calendar">
   <title>Wall Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icons/calendar.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icons/calendar.svg">
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
+<body data-theme="midnight" data-shape="rounded">
+  <div class="ambient-glow" aria-hidden="true"></div>
+
   <header class="topbar">
     <div class="brand">
-      <div class="eyebrow">LOCAL WALL CALENDAR</div>
+      <div class="brand-eyebrow">
+        <span class="live-dot" aria-hidden="true"></span>
+        <span class="eyebrow-text">WALL CALENDAR</span>
+        <span id="headerWeatherBadge" class="header-weather-badge hidden"></span>
+      </div>
       <h1 id="monthTitle">Calendar</h1>
-      <div id="clock" class="clock"></div>
+      <div id="clock" class="clock">
+        <span id="clockTime" class="clock-time"></span>
+        <span id="clockDate" class="clock-date"></span>
+      </div>
     </div>
     <div class="toolbar" aria-label="Calendar controls">
-      <button id="prev" class="icon-button" aria-label="Previous">‹</button>
-      <button id="today" class="secondary">Today</button>
-      <button id="next" class="icon-button" aria-label="Next">›</button>
+      <div class="nav-cluster">
+        <button id="prev" class="icon-button" aria-label="Previous">‹</button>
+        <button id="today" class="today-button">Today</button>
+        <button id="next" class="icon-button" aria-label="Next">›</button>
+      </div>
       <div class="view-switcher" role="group" aria-label="View">
         <button data-view="month" class="view-button active">Month</button>
         <button data-view="monthday" class="view-button">Month + day</button>
         <button data-view="week" class="view-button">Week</button>
         <button data-view="agenda" class="view-button">Agenda</button>
       </div>
-      <button id="settingsButton" class="secondary">⚙ Settings</button>
-      <button id="newEvent" class="primary">＋ New event</button>
+      <button id="themeButton" class="icon-button theme-toggle-btn" title="Quick Theme Switcher" aria-label="Change Theme">🎨</button>
+      <button id="settingsButton" class="secondary settings-trigger-btn">⚙ Settings</button>
+      <button id="newEvent" class="primary new-event-btn"><span class="btn-icon">＋</span> New event</button>
     </div>
   </header>
 
   <main class="page">
-    <div id="status" class="status" role="status">Loading local calendar…</div>
+    <div id="status" class="status" role="status">
+      <span class="status-pulse" aria-hidden="true"></span>
+      <span class="status-text">Loading local calendar…</span>
+    </div>
     <section class="layout">
       <section class="calendar-panel" aria-label="Calendar view">
         <div id="calendarGrid" class="calendar-grid"></div>
-        <div id="monthDayView" class="month-day-view hidden"><div id="monthDayMonth" class="month-day-month"></div><div id="monthDayAgenda" class="month-day-agenda"></div></div>
+        <div id="monthDayView" class="month-day-view hidden">
+          <div id="monthDayMonth" class="month-day-month"></div>
+          <div id="monthDayAgenda" class="month-day-agenda"></div>
+        </div>
         <div id="weekView" class="week-view hidden"></div>
         <div id="agendaView" class="agenda-view hidden"></div>
       </section>
       <aside class="side-panel">
         <div class="side-heading">
-          <h2>Calendars</h2>
-          <div class="side-actions"><button id="addCalendar" class="small-button" title="New calendar">＋</button><button id="importCalendar" class="small-button" title="Import ICS">↥</button></div>
+          <div class="side-title-group">
+            <span class="side-icon" aria-hidden="true">📅</span>
+            <h2>Calendars</h2>
+          </div>
+          <div class="side-actions">
+            <button id="addCalendar" class="small-button action-add" title="New calendar" aria-label="New calendar">＋</button>
+            <button id="importCalendar" class="small-button action-import" title="Import ICS" aria-label="Import ICS">↥</button>
+          </div>
         </div>
         <div id="calendarList" class="calendar-list"></div>
         <section id="weatherWidget" class="weather-widget hidden" aria-label="Weather"></section>
@@ -55,29 +82,55 @@
     </section>
   </main>
 
-  <dialog id="eventDialog" class="event-dialog">
+  <!-- EVENT DIALOG -->
+  <dialog id="eventDialog" class="event-dialog modal-surface">
     <form id="eventForm" method="dialog">
       <div class="dialog-heading">
-        <div>
+        <div class="dialog-title-group">
           <div class="eyebrow">EVENT</div>
           <h2 id="dialogTitle">New event</h2>
         </div>
         <button type="button" id="closeDialog" class="close-button" aria-label="Close">×</button>
       </div>
       <input type="hidden" id="eventId">
-      <label>Title<input id="eventTitle" required maxlength="500" autocomplete="off"></label>
+      <label class="form-field">
+        <span class="field-label">Title</span>
+        <input id="eventTitle" required maxlength="500" autocomplete="off" placeholder="Event title…">
+      </label>
       <div class="form-row">
-        <label>Date<input id="eventDate" type="date" required></label>
-        <label class="all-day-label"><input id="eventAllDay" type="checkbox"> All day</label>
+        <label class="form-field">
+          <span class="field-label">Date</span>
+          <input id="eventDate" type="date" required>
+        </label>
+        <label class="all-day-label">
+          <input id="eventAllDay" type="checkbox">
+          <span class="custom-switch"></span>
+          <span>All day</span>
+        </label>
       </div>
       <div class="form-row timed-fields">
-        <label>Starts<input id="eventStart" type="time" required></label>
-        <label>Ends<input id="eventEnd" type="time" required></label>
+        <label class="form-field">
+          <span class="field-label">Starts</span>
+          <input id="eventStart" type="time" required>
+        </label>
+        <label class="form-field">
+          <span class="field-label">Ends</span>
+          <input id="eventEnd" type="time" required>
+        </label>
       </div>
-      <label>Calendar<select id="eventCalendar"></select></label>
+      <label class="form-field">
+        <span class="field-label">Calendar</span>
+        <select id="eventCalendar"></select>
+      </label>
       <p id="eventSourceNote" class="settings-help hidden"></p>
-      <label>Location<input id="eventLocation" maxlength="1000" autocomplete="off"></label>
-      <label>Notes<textarea id="eventDescription" rows="3" maxlength="10000"></textarea></label>
+      <label class="form-field">
+        <span class="field-label">Location</span>
+        <input id="eventLocation" maxlength="1000" autocomplete="off" placeholder="Location or meeting room…">
+      </label>
+      <label class="form-field">
+        <span class="field-label">Notes</span>
+        <textarea id="eventDescription" rows="3" maxlength="10000" placeholder="Add details or notes…"></textarea>
+      </label>
       <div id="formError" class="form-error" role="alert"></div>
       <div class="dialog-actions">
         <button type="button" id="deleteEvent" class="danger hidden">Delete</button>
@@ -88,53 +141,217 @@
     </form>
   </dialog>
 
-  <dialog id="settingsDialog" class="settings-dialog">
+  <!-- SETTINGS DIALOG -->
+  <dialog id="settingsDialog" class="settings-dialog modal-surface">
     <form id="settingsForm" method="dialog">
       <div class="dialog-heading">
-        <div><div class="eyebrow">WALL CALENDAR</div><h2>Display &amp; sources</h2></div>
+        <div class="dialog-title-group">
+          <div class="eyebrow">WALL CALENDAR</div>
+          <h2>Display &amp; Appearance</h2>
+        </div>
         <button type="button" id="closeSettings" class="close-button" aria-label="Close">×</button>
       </div>
-      <div class="settings-grid">
-        <label>Display mode<select id="displayMode"><option value="auto">Automatic day / night</option><option value="day">Day</option><option value="night">Night</option></select></label>
-        <label>Wall orientation<select id="wallOrientation"><option value="landscape">Landscape</option><option value="portrait">Portrait</option><option value="auto">Automatic sensor</option></select></label>
-        <label class="check-setting"><input id="adaptiveBrightness" type="checkbox"> Adaptive screen brightness</label>
-        <label>Week view starts<select id="weekStart"><option value="today">Today</option><option value="sunday">Sunday</option></select></label>
-        <label class="check-setting"><input id="startWallMode" type="checkbox"> Start in wall mode on launch</label>
-        <label class="check-setting"><input id="showLocalCalendar" type="checkbox"> Show Local calendar in sidebar</label>
-        <label>Default view on startup<select id="defaultView"><option value="month">Month</option><option value="monthday">Month + day</option><option value="week">Week</option><option value="agenda">Agenda</option></select></label>
-        <label>Week &amp; agenda layout<select id="weekAgendaLayout"><option value="list">Event list</option><option value="timegrid">Hourly time grid</option></select></label>
-        <label>Time grid starts<select id="timeGridStart"></select></label>
-        <label>Time grid ends<select id="timeGridEnd"></select></label>
-        <label>Weather ZIP code<input id="weatherZip" maxlength="16" inputmode="numeric" placeholder="e.g. 14623"></label>
-        <label>Weather location label<input id="weatherLabel" maxlength="120" placeholder="e.g. Home or Rochester, NY"></label>
+
+      <div class="settings-section">
+        <h3 class="section-title">Theme &amp; Style</h3>
+        <div class="theme-picker-grid" role="radiogroup" aria-label="Theme Selection">
+          <button type="button" class="theme-card active" data-theme-choice="midnight">
+            <span class="theme-preview midnight-preview"></span>
+            <span class="theme-name">Midnight OLED</span>
+          </button>
+          <button type="button" class="theme-card" data-theme-choice="frost">
+            <span class="theme-preview frost-preview"></span>
+            <span class="theme-name">Nordic Frost</span>
+          </button>
+          <button type="button" class="theme-card" data-theme-choice="hearth">
+            <span class="theme-preview hearth-preview"></span>
+            <span class="theme-name">Warm Hearth</span>
+          </button>
+          <button type="button" class="theme-card" data-theme-choice="botanical">
+            <span class="theme-preview botanical-preview"></span>
+            <span class="theme-name">Emerald Forest</span>
+          </button>
+          <button type="button" class="theme-card" data-theme-choice="twilight">
+            <span class="theme-preview twilight-preview"></span>
+            <span class="theme-name">Sunset Dusk</span>
+          </button>
+          <button type="button" class="theme-card" data-theme-choice="minimal">
+            <span class="theme-preview minimal-preview"></span>
+            <span class="theme-name">Minimal Paper</span>
+          </button>
+        </div>
+        <input type="hidden" id="wallThemeChoice" value="midnight">
       </div>
+
+      <div class="settings-section">
+        <h3 class="section-title">Corner Shape &amp; Geometry</h3>
+        <div class="shape-picker-row" role="radiogroup" aria-label="Corner Shape Selection">
+          <button type="button" class="shape-card active" data-shape-choice="rounded">
+            <span class="shape-icon shape-rounded-icon"></span>
+            <span class="shape-name">Rounded Modern</span>
+          </button>
+          <button type="button" class="shape-card" data-shape-choice="pill">
+            <span class="shape-icon shape-pill-icon"></span>
+            <span class="shape-name">Pill Soft</span>
+          </button>
+          <button type="button" class="shape-card" data-shape-choice="sharp">
+            <span class="shape-icon shape-sharp-icon"></span>
+            <span class="shape-name">Sharp Minimal</span>
+          </button>
+        </div>
+        <input type="hidden" id="wallShapeChoice" value="rounded">
+      </div>
+
+      <div class="settings-section">
+        <h3 class="section-title">Display &amp; Layout</h3>
+        <div class="settings-grid">
+          <label class="form-field">
+            <span class="field-label">Display mode</span>
+            <select id="displayMode">
+              <option value="auto">Automatic day / night</option>
+              <option value="day">Day</option>
+              <option value="night">Night</option>
+            </select>
+          </label>
+          <label class="form-field">
+            <span class="field-label">Wall orientation</span>
+            <select id="wallOrientation">
+              <option value="landscape">Landscape</option>
+              <option value="portrait">Portrait</option>
+              <option value="auto">Automatic sensor</option>
+            </select>
+          </label>
+          <label class="check-setting">
+            <input id="adaptiveBrightness" type="checkbox">
+            <span class="custom-switch"></span>
+            <span>Adaptive screen brightness</span>
+          </label>
+          <label class="form-field">
+            <span class="field-label">Week view starts</span>
+            <select id="weekStart">
+              <option value="today">Today</option>
+              <option value="sunday">Sunday</option>
+            </select>
+          </label>
+          <label class="check-setting">
+            <input id="startWallMode" type="checkbox">
+            <span class="custom-switch"></span>
+            <span>Start in wall mode on launch</span>
+          </label>
+          <label class="check-setting">
+            <input id="showLocalCalendar" type="checkbox">
+            <span class="custom-switch"></span>
+            <span>Show Local calendar in sidebar</span>
+          </label>
+          <label class="form-field">
+            <span class="field-label">Default view on startup</span>
+            <select id="defaultView">
+              <option value="month">Month</option>
+              <option value="monthday">Month + day</option>
+              <option value="week">Week</option>
+              <option value="agenda">Agenda</option>
+            </select>
+          </label>
+          <label class="form-field">
+            <span class="field-label">Week &amp; agenda layout</span>
+            <select id="weekAgendaLayout">
+              <option value="list">Event list</option>
+              <option value="timegrid">Hourly time grid</option>
+            </select>
+          </label>
+          <label class="form-field">
+            <span class="field-label">Time grid starts</span>
+            <select id="timeGridStart"></select>
+          </label>
+          <label class="form-field">
+            <span class="field-label">Time grid ends</span>
+            <select id="timeGridEnd"></select>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="section-title">Weather Station</h3>
+        <div class="settings-grid">
+          <label class="form-field">
+            <span class="field-label">Weather ZIP code</span>
+            <input id="weatherZip" maxlength="16" inputmode="numeric" placeholder="e.g. 14623">
+          </label>
+          <label class="form-field">
+            <span class="field-label">Location label</span>
+            <input id="weatherLabel" maxlength="120" placeholder="e.g. Home or Rochester, NY">
+          </label>
+        </div>
+      </div>
+
       <p class="settings-help">Hourly time-grid mode uses one block per hour. Timed events are placed by their start and end times; all-day events remain above the hourly rows.</p>
+      
       <div class="settings-update-row">
         <button type="button" id="checkForUpdates" class="secondary">Check for updates</button>
         <span id="updateStatus" class="settings-help" role="status"></span>
       </div>
+      
       <p class="settings-footnote">Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Air quality: <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noreferrer">Copernicus CAMS ENSEMBLE</a>.</p>
       <div id="settingsError" class="form-error" role="alert"></div>
-      <div class="dialog-actions"><button type="button" id="exitWallMode" class="secondary">Exit wall mode</button><span class="grow"></span><button type="button" id="cancelSettings" class="secondary">Close</button><button type="button" id="saveSettings" class="primary">Save settings</button></div>
+      
+      <div class="dialog-actions">
+        <button type="button" id="exitWallMode" class="secondary">Exit wall mode</button>
+        <span class="grow"></span>
+        <button type="button" id="cancelSettings" class="secondary">Close</button>
+        <button type="button" id="saveSettings" class="primary">Save settings</button>
+      </div>
     </form>
   </dialog>
 
-  <dialog id="calendarDialog" class="settings-dialog calendar-dialog">
+  <!-- CALENDAR DIALOG -->
+  <dialog id="calendarDialog" class="settings-dialog calendar-dialog modal-surface">
     <form id="calendarForm" method="dialog">
       <div class="dialog-heading">
-        <div><div class="eyebrow">CALENDAR</div><h2>Add calendar</h2></div>
+        <div class="dialog-title-group">
+          <div class="eyebrow">CALENDAR</div>
+          <h2>Add calendar</h2>
+        </div>
         <button type="button" id="closeCalendar" class="close-button" aria-label="Close">×</button>
       </div>
       <div class="source-section">
         <p class="source-help">Import an .ics file as an editable local copy, a read-only snapshot, or connect a one-way incoming ICS URL.</p>
-        <label>Calendar name<input id="sourceTitle" maxlength="120" placeholder="e.g. School holidays"></label>
-        <div class="color-setting"><span class="color-setting-label">Calendar color</span><div class="color-preview-row"><button type="button" id="sourceColorPreview" class="color-preview" aria-label="Selected calendar color"></button><span id="sourceColorValue" class="color-value"></span><input id="sourceColor" type="hidden" value="#4f7cff"><input id="sourceColorCustom" type="color" class="color-custom-input" value="#4f7cff" title="Choose a custom color"></div><div id="sourceColorPalette" class="color-palette settings-color-palette"></div></div>
-        <label>ICS file<input id="sourceFile" type="file" accept=".ics,text/calendar,text/plain"></label>
-        <label>ICS feed URL (optional)<input id="sourceUrl" type="url" placeholder="https://example.org/calendar.ics"></label>
-        <label>Permission<select id="sourceMode"><option value="editable">Editable local copy</option><option value="readonly">Read-only snapshot</option><option value="one_way">One-way incoming sync</option></select></label>
+        <label class="form-field">
+          <span class="field-label">Calendar name</span>
+          <input id="sourceTitle" maxlength="120" placeholder="e.g. School holidays">
+        </label>
+        <div class="color-setting">
+          <span class="color-setting-label">Calendar color</span>
+          <div class="color-preview-row">
+            <button type="button" id="sourceColorPreview" class="color-preview" aria-label="Selected calendar color"></button>
+            <span id="sourceColorValue" class="color-value"></span>
+            <input id="sourceColor" type="hidden" value="#4f7cff">
+            <input id="sourceColorCustom" type="color" class="color-custom-input" value="#4f7cff" title="Choose a custom color">
+          </div>
+          <div id="sourceColorPalette" class="color-palette settings-color-palette"></div>
+        </div>
+        <label class="form-field">
+          <span class="field-label">ICS file</span>
+          <input id="sourceFile" type="file" accept=".ics,text/calendar,text/plain">
+        </label>
+        <label class="form-field">
+          <span class="field-label">ICS feed URL (optional)</span>
+          <input id="sourceUrl" type="url" placeholder="https://example.org/calendar.ics">
+        </label>
+        <label class="form-field">
+          <span class="field-label">Permission</span>
+          <select id="sourceMode">
+            <option value="editable">Editable local copy</option>
+            <option value="readonly">Read-only snapshot</option>
+            <option value="one_way">One-way incoming sync</option>
+          </select>
+        </label>
         <div id="calendarError" class="form-error" role="alert"></div>
       </div>
-      <div class="dialog-actions"><span class="grow"></span><button type="button" id="cancelCalendar" class="secondary">Cancel</button><button type="button" id="doImport" class="primary">Add calendar</button></div>
+      <div class="dialog-actions">
+        <span class="grow"></span>
+        <button type="button" id="cancelCalendar" class="secondary">Cancel</button>
+        <button type="button" id="doImport" class="primary">Add calendar</button>
+      </div>
     </form>
   </dialog>
 

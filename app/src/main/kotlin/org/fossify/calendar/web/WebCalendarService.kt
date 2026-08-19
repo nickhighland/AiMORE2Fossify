@@ -180,6 +180,8 @@ private class CalendarHttpServer(
         return jsonResponse(JSONObject().apply {
             put("startWallMode", config.wallStartMode)
             put("displayMode", config.wallDisplayMode)
+            put("theme", config.wallTheme)
+            put("shape", config.wallShape)
             put("adaptiveBrightness", config.wallAdaptiveBrightness)
             put("orientation", config.wallOrientation)
             put("weekStart", config.wallWeekStart)
@@ -219,6 +221,20 @@ private class CalendarHttpServer(
             val mode = body.optString("displayMode").lowercase()
             require(mode in setOf("auto", "day", "night")) { "displayMode must be auto, day, or night" }
             config.wallDisplayMode = mode
+        }
+        if (body.has("theme")) {
+            val theme = body.optString("theme").lowercase()
+            require(theme in setOf("midnight", "frost", "hearth", "botanical", "twilight", "minimal")) {
+                "theme must be midnight, frost, hearth, botanical, twilight, or minimal"
+            }
+            config.wallTheme = theme
+        }
+        if (body.has("shape")) {
+            val shape = body.optString("shape").lowercase()
+            require(shape in setOf("rounded", "pill", "sharp")) {
+                "shape must be rounded, pill, or sharp"
+            }
+            config.wallShape = shape
         }
         if (body.has("adaptiveBrightness")) {
             config.wallAdaptiveBrightness = body.optBoolean("adaptiveBrightness", true)

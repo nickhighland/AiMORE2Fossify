@@ -143,6 +143,8 @@ class WallCalendarActivity : SimpleActivity() {
             val settings = JSONObject()
                 .put("displayMode", config.wallDisplayMode)
                 .put("effectiveMode", resolvedMode)
+                .put("theme", config.wallTheme)
+                .put("shape", config.wallShape)
                 .put("adaptiveBrightness", config.wallAdaptiveBrightness)
                 .put("orientation", config.wallOrientation)
                 .put("weekStart", config.wallWeekStart)

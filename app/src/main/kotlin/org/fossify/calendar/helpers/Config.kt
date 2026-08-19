@@ -42,6 +42,14 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getString(WALL_DISPLAY_MODE, "auto") ?: "auto"
         set(mode) = prefs.edit().putString(WALL_DISPLAY_MODE, mode).apply()
 
+    var wallTheme: String
+        get() = prefs.getString(WALL_THEME, "midnight") ?: "midnight"
+        set(theme) = prefs.edit().putString(WALL_THEME, theme).apply()
+
+    var wallShape: String
+        get() = prefs.getString(WALL_SHAPE, "rounded") ?: "rounded"
+        set(shape) = prefs.edit().putString(WALL_SHAPE, shape).apply()
+
     var wallAdaptiveBrightness: Boolean
         get() = prefs.getBoolean(WALL_ADAPTIVE_BRIGHTNESS, true)
         set(enabled) = prefs.edit().putBoolean(WALL_ADAPTIVE_BRIGHTNESS, enabled).apply()
