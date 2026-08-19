@@ -30,16 +30,6 @@ body[data-shape="rounded"], body:not([data-shape]) {
   --chip-radius: 8px;
 }
 
-body[data-shape="pill"] {
-  --radius-xl: 32px;
-  --radius-lg: 24px;
-  --radius-md: 18px;
-  --radius-sm: 12px;
-  --radius-xs: 8px;
-  --radius-pill: 9999px;
-  --chip-radius: 9999px;
-}
-
 body[data-shape="sharp"] {
   --radius-xl: 8px;
   --radius-lg: 6px;
@@ -1544,7 +1534,7 @@ body.native-wall .side-panel {
 
 .color-palette {
   display: none;
-  grid-template-columns: repeat(8, 24px);
+  grid-template-columns: repeat(6, 24px);
   gap: 6px;
   position: absolute;
   z-index: 30;
@@ -1697,12 +1687,12 @@ body.native-wall .side-panel {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  font-size: 0.88rem;
+  font-size: 0.96rem;
   font-weight: 650;
 }
 
 .weather-pin {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   color: #93c5fd;
 }
 
@@ -1715,7 +1705,7 @@ body.native-wall .side-panel {
 }
 
 .weather-icon {
-  font-size: 2.6rem;
+  font-size: 2.8rem;
   line-height: 1;
   color: #fde047;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
@@ -1723,14 +1713,14 @@ body.native-wall .side-panel {
 
 .weather-temperature {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 3.8vw, 2.8rem);
+  font-size: clamp(2.2rem, 4vw, 3rem);
   font-weight: 450;
   line-height: 0.95;
   letter-spacing: -0.02em;
 }
 
 .weather-condition {
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   font-weight: 500;
   color: #e0f2fe;
 }
@@ -1745,14 +1735,14 @@ body.native-wall .side-panel {
   grid-template-columns: 20px 1fr auto;
   gap: 6px;
   align-items: center;
-  min-height: 27px;
+  min-height: 30px;
   padding: 3px 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
 }
 
 .weather-row:last-child { border-bottom: 0; }
-.weather-row-icon { text-align: center; font-size: 0.85rem; }
+.weather-row-icon { text-align: center; font-size: 0.9rem; }
 .weather-row-label { color: #cbd5e1; font-weight: 450; }
 .weather-row-value { font-weight: 550; text-align: right; color: #ffffff; }
 
@@ -1778,34 +1768,34 @@ body.native-wall .side-panel {
 }
 
 .weather-day-name {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .weather-day-icon {
-  font-size: 1.4rem;
+  font-size: 1.55rem;
   margin: 3px 0 1px;
   color: #fde047;
 }
 
 .weather-day-high {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 550;
 }
 
 .weather-day-low {
   color: #94a3b8;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-weight: 400;
 }
 
 .weather-day-rain {
   margin-top: 3px;
   color: #7dd3fc;
-  font-size: 0.7rem;
+  font-size: 0.74rem;
   font-weight: 600;
 }
 
@@ -1971,7 +1961,7 @@ dialog::backdrop {
 /* SHAPE PICKER */
 .shape-picker-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -2004,7 +1994,6 @@ dialog::backdrop {
 }
 
 .shape-rounded-icon { border-radius: 8px; }
-.shape-pill-icon { border-radius: 9999px; }
 .shape-sharp-icon { border-radius: 2px; }
 
 .shape-name {

@@ -47,7 +47,8 @@ class Config(context: Context) : BaseConfig(context) {
         set(theme) = prefs.edit().putString(WALL_THEME, theme).apply()
 
     var wallShape: String
-        get() = prefs.getString(WALL_SHAPE, "rounded") ?: "rounded"
+        get() = prefs.getString(WALL_SHAPE, "rounded")?.lowercase()
+            ?.takeIf { it == "rounded" || it == "sharp" } ?: "rounded"
         set(shape) = prefs.edit().putString(WALL_SHAPE, shape).apply()
 
     var wallAdaptiveBrightness: Boolean

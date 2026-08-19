@@ -236,8 +236,8 @@ private class CalendarHttpServer(
         }
         if (body.has("shape")) {
             val shape = body.optString("shape").lowercase()
-            require(shape in setOf("rounded", "pill", "sharp")) {
-                "shape must be rounded, pill, or sharp"
+            require(shape in setOf("rounded", "sharp")) {
+                "shape must be rounded or sharp"
             }
             config.wallShape = shape
         }

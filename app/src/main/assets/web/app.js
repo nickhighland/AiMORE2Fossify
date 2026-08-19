@@ -5,7 +5,7 @@
   document.body.classList.toggle("native-wall", isNativeWall);
 
   const THEMES = ["midnight", "frost", "hearth", "botanical", "twilight", "minimal"];
-  const SHAPES = ["rounded", "pill", "sharp"];
+  const SHAPES = ["rounded", "sharp"];
   const EVENT_FONT_SIZES = ["compact", "normal", "large", "xlarge", "huge"];
   const EVENT_ALIGNS = ["top", "center"];
   const EVENT_FONTS = ["plus-jakarta", "outfit", "inter", "lexend", "roboto", "space-grotesk", "system"];
@@ -366,6 +366,25 @@
     $("calendarGrid").innerHTML = html;
     $("calendarGrid").querySelectorAll(".day-cell").forEach((cell) => cell.addEventListener("dblclick", () => openNewEvent(new Date(`${cell.dataset.date}T00:00:00`))));
     attachEventClicks($("calendarGrid"));
+    scrollMonthToToday();
+  }
+
+  function scrollMonthToToday() {
+    if (!document.body.classList.contains("native-wall")) return;
+    const grid = $("calendarGrid");
+    const panel = grid?.closest(".calendar-panel");
+    if (!grid || !panel) return;
+    const todayCell = grid.querySelector(`[data-date="${dateKey(new Date())}"]`);
+    requestAnimationFrame(() => {
+      if (!todayCell) {
+        panel.scrollTop = 0;
+        return;
+      }
+      const cells = Array.from(grid.querySelectorAll(".day-cell"));
+      const row = Math.floor(cells.indexOf(todayCell) / 7);
+      const maxScroll = Math.max(0, panel.scrollHeight - panel.clientHeight);
+      panel.scrollTop = row >= 5 ? maxScroll : Math.min(todayCell.offsetTop, maxScroll);
+    });
   }
 
   function renderMonthDay() {
