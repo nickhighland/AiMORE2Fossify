@@ -773,7 +773,7 @@ h2 {
 
 .day-events {
   display: grid;
-  gap: 5px;
+  gap: 3px;
 }
 
 .event-chip {
@@ -781,9 +781,9 @@ h2 {
   flex-direction: column;
   width: 100%;
   overflow: hidden;
-  padding: 6px 9px;
+  padding: 3px 6px;
   border: 0;
-  border-left: 4px solid var(--event-color, var(--accent));
+  border-left: 3px solid var(--event-color, var(--accent));
   border-radius: var(--chip-radius);
   background: var(--panel-card);
   color: var(--text);
@@ -794,7 +794,7 @@ h2 {
 
 .event-chip:hover {
   background: var(--panel-card-hover);
-  transform: translateX(2px) scale(1.01);
+  transform: translateX(2px);
   box-shadow: var(--shadow-md);
 }
 
@@ -803,17 +803,18 @@ h2 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.94rem;
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: 0.86rem;
+  font-weight: 550;
+  line-height: 1.2;
 }
 
 .event-chip .event-time {
   display: block;
   color: var(--text-muted);
-  margin-top: 2px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  margin-top: 1px;
+  font-size: 0.72rem;
+  font-weight: 450;
+  line-height: 1.15;
 }
 
 .more {
@@ -914,8 +915,8 @@ h2 {
 
 .month-day-events {
   display: grid;
-  gap: 10px;
-  padding-top: 18px;
+  gap: 5px;
+  padding-top: 14px;
 }
 
 /* ==========================================================================
@@ -960,8 +961,8 @@ h2 {
 
 .week-events {
   display: grid;
-  gap: 8px;
-  padding: 12px 10px;
+  gap: 4px;
+  padding: 8px 6px;
 }
 
 /* TIME GRID */
@@ -1110,16 +1111,16 @@ h2 {
 
 .time-grid-all-day-event {
   width: 100%;
-  min-height: 28px;
+  min-height: 24px;
   overflow: hidden;
-  padding: 4px 8px;
+  padding: 2px 6px;
   border: 0;
   border-left: 3px solid var(--event-color, var(--accent));
   border-radius: var(--chip-radius);
   background: var(--panel-card);
   color: var(--text);
-  font-size: 0.84rem;
-  font-weight: 650;
+  font-size: 0.78rem;
+  font-weight: 550;
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1144,11 +1145,11 @@ h2 {
   left: var(--event-left);
   width: var(--event-width);
   height: var(--event-height);
-  min-height: 32px;
+  min-height: 24px;
   overflow: hidden;
-  padding: 6px 8px;
+  padding: 3px 6px;
   border: 0;
-  border-left: 4px solid var(--event-color, var(--accent));
+  border-left: 3px solid var(--event-color, var(--accent));
   border-radius: var(--chip-radius);
   background: var(--panel-card);
   color: var(--text);
@@ -1159,9 +1160,9 @@ h2 {
 }
 
 .time-grid-event:hover {
-  filter: brightness(1.16);
+  filter: brightness(1.14);
   z-index: 4;
-  transform: scale(1.02);
+  transform: scale(1.01);
 }
 
 .time-grid-event-title, .time-grid-event-time, .time-grid-event-location {
@@ -1172,16 +1173,17 @@ h2 {
 }
 
 .time-grid-event-title {
-  font-size: 0.94rem;
-  font-weight: 750;
+  font-size: 0.86rem;
+  font-weight: 550;
   line-height: 1.2;
 }
 
 .time-grid-event-time, .time-grid-event-location {
-  margin-top: 3px;
+  margin-top: 1px;
   color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 450;
+  line-height: 1.15;
 }
 
 /* ==========================================================================
@@ -1216,12 +1218,12 @@ h2 {
 .agenda-event {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
-  padding: 14px 16px;
-  margin-bottom: 8px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
   border: 0;
-  border-left: 5px solid var(--event-color, var(--accent));
+  border-left: 4px solid var(--event-color, var(--accent));
   border-radius: var(--radius-md);
   background: var(--panel-card);
   text-align: left;
@@ -1236,24 +1238,24 @@ h2 {
 }
 
 .agenda-event-time {
-  min-width: 90px;
+  min-width: 84px;
   color: var(--text-muted);
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: 0.84rem;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
 .agenda-event-title {
-  font-size: 1.05rem;
-  font-weight: 750;
+  font-size: 0.98rem;
+  font-weight: 550;
   color: var(--text);
 }
 
 .agenda-event-meta {
   color: var(--text-muted);
-  margin-top: 4px;
-  font-size: 0.88rem;
-  font-weight: 500;
+  margin-top: 2px;
+  font-size: 0.82rem;
+  font-weight: 400;
 }
 
 /* ==========================================================================
@@ -2085,9 +2087,9 @@ input:checked + .custom-switch::after {
   .day-cell { min-height: 80px; padding: 3px; }
   .month-day-cell { min-height: 62px; padding: 3px; }
   .day-number { min-width: 24px; height: 24px; font-size: 0.82rem; }
-  .event-chip { border-left-width: 3px; padding: 4px 6px; }
-  .event-chip .event-title { font-size: 0.84rem; }
-  .event-chip .event-time { font-size: 0.72rem; }
+  .event-chip { border-left-width: 3px; padding: 3px 5px; }
+  .event-chip .event-title { font-size: 0.80rem; }
+  .event-chip .event-time { font-size: 0.68rem; }
   .form-row, .settings-grid, .theme-picker-grid, .shape-picker-row {
     grid-template-columns: 1fr;
   }

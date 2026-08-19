@@ -380,10 +380,10 @@
 
   function timeGridEventMarkup(item, lane, laneCount, visibleStart) {
     const top = ((item.start - visibleStart) / 3600) * TIME_GRID_HOUR_HEIGHT;
-    const height = Math.max(32, ((item.end - item.start) / 3600) * TIME_GRID_HOUR_HEIGHT - 4);
+    const height = Math.max(24, ((item.end - item.start) / 3600) * TIME_GRID_HOUR_HEIGHT - 3);
     const event = item.event;
     const time = event.allDay ? "All day" : `${timeFormatter.format(fromSeconds(item.start))}–${timeFormatter.format(fromSeconds(item.end))}`;
-    return `<button class="time-grid-event" style="--event-color:${eventColor(event)};--event-top:${top}px;--event-height:${height}px;--event-left:${lane * (100 / laneCount)}%;--event-width:calc(${100 / laneCount}% - 4px)" data-event-id="${event.id}" data-occurrence="${event.start}"><span class="time-grid-event-title">${escapeHtml(event.title)}</span><span class="time-grid-event-time">${escapeHtml(time)}</span>${event.location ? `<span class="time-grid-event-location">📍 ${escapeHtml(event.location)}</span>` : ""}</button>`;
+    return `<button class="time-grid-event" style="--event-color:${eventColor(event)};--event-top:${top}px;--event-height:${height}px;--event-left:${lane * (100 / laneCount)}%;--event-width:calc(${100 / laneCount}% - 3px)" data-event-id="${event.id}" data-occurrence="${event.start}"><span class="time-grid-event-title">${escapeHtml(event.title)}</span><span class="time-grid-event-time">${escapeHtml(time)}</span>${event.location ? `<span class="time-grid-event-location">📍 ${escapeHtml(event.location)}</span>` : ""}</button>`;
   }
 
   function timeGridAllDayMarkup(event) {
@@ -439,7 +439,7 @@
     });
 
     const maxAllDayCount = dayColumns.reduce((maximum, column) => Math.max(maximum, column.allDayEvents.length), 0);
-    const allDayHeight = maxAllDayCount === 0 ? 40 : 16 + maxAllDayCount * 28 + Math.max(0, maxAllDayCount - 1) * 4;
+    const allDayHeight = maxAllDayCount === 0 ? 36 : 10 + maxAllDayCount * 26 + Math.max(0, maxAllDayCount - 1) * 3;
 
     const columns = dayColumns.map(({ isToday, allDayEvents, positioned, visibleStart }) => {
       const currentTimeIndicator = (isToday && isCurrentTimeVisible)

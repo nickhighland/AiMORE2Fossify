@@ -1,4 +1,4 @@
-const CACHE_NAME = "wall-calendar-shell-v2";
+const CACHE_NAME = "wall-calendar-shell-v3";
 const SHELL = ["/", "/styles.css", "/app.js", "/manifest.webmanifest", "/icons/calendar.svg"];
 
 self.addEventListener("install", (event) => {
