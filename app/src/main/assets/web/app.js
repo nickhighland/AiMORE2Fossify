@@ -769,6 +769,11 @@
       card.classList.toggle("active", card.dataset.shapeChoice === shapeChoice);
     });
 
+    if ($("eventFontSize")) $("eventFontSize").value = effectiveEventFontSize(state.settings);
+    if ($("eventAlign")) $("eventAlign").value = effectiveEventAlign(state.settings);
+    if ($("eventFontFamily")) $("eventFontFamily").value = effectiveEventFontFamily(state.settings);
+    if ($("eventFontWeight")) $("eventFontWeight").value = effectiveEventFontWeight(state.settings);
+
     $("settingsError").textContent = "";
     $("updateStatus").textContent = "";
     $("updateStatus").classList.remove("error");
@@ -953,37 +958,37 @@
     }
   });
 
-  $("prev").addEventListener("click", () => { moveDate(-1); load(); });
-  $("next").addEventListener("click", () => { moveDate(1); load(); });
-  $("today").addEventListener("click", () => { state.date = new Date(); state.followToday = true; load(); });
-  $("newEvent").addEventListener("click", () => openNewEvent());
-  $("closeDialog").addEventListener("click", () => $("eventDialog").close());
-  $("cancelEvent").addEventListener("click", () => $("eventDialog").close());
-  $("eventAllDay").addEventListener("change", () => document.querySelectorAll(".timed-fields").forEach((row) => row.classList.toggle("hidden", $("eventAllDay").checked)));
-  $("eventForm").addEventListener("submit", async (event) => { event.preventDefault(); try { await saveEvent(formPayload()); } catch (error) { $("formError").textContent = error.message; } });
-  $("deleteEvent").addEventListener("click", async () => { if (!confirm("Delete this event?")) return; try { await api(`/api/events/${$("eventId").value}`, { method: "DELETE" }); $("eventDialog").close(); await load(); } catch (error) { $("formError").textContent = error.message; } });
-  $("addCalendar").addEventListener("click", () => openCalendarDialog());
-  $("settingsButton").addEventListener("click", openSettings);
-  $("importCalendar").addEventListener("click", () => openCalendarDialog(true));
-  $("closeSettings").addEventListener("click", () => {
+  $("prev")?.addEventListener("click", () => { moveDate(-1); load(); });
+  $("next")?.addEventListener("click", () => { moveDate(1); load(); });
+  $("today")?.addEventListener("click", () => { state.date = new Date(); state.followToday = true; load(); });
+  $("newEvent")?.addEventListener("click", () => openNewEvent());
+  $("closeDialog")?.addEventListener("click", () => $("eventDialog").close());
+  $("cancelEvent")?.addEventListener("click", () => $("eventDialog").close());
+  $("eventAllDay")?.addEventListener("change", () => document.querySelectorAll(".timed-fields").forEach((row) => row.classList.toggle("hidden", $("eventAllDay").checked)));
+  $("eventForm")?.addEventListener("submit", async (event) => { event.preventDefault(); try { await saveEvent(formPayload()); } catch (error) { $("formError").textContent = error.message; } });
+  $("deleteEvent")?.addEventListener("click", async () => { if (!confirm("Delete this event?")) return; try { await api(`/api/events/${$("eventId").value}`, { method: "DELETE" }); $("eventDialog").close(); await load(); } catch (error) { $("formError").textContent = error.message; } });
+  $("addCalendar")?.addEventListener("click", () => openCalendarDialog());
+  $("settingsButton")?.addEventListener("click", openSettings);
+  $("importCalendar")?.addEventListener("click", () => openCalendarDialog(true));
+  $("closeSettings")?.addEventListener("click", () => {
     // Revert un-saved live preview
     applyWallSettings(state.settings);
     $("settingsDialog").close();
   });
-  $("cancelSettings").addEventListener("click", () => {
+  $("cancelSettings")?.addEventListener("click", () => {
     applyWallSettings(state.settings);
     $("settingsDialog").close();
   });
-  $("saveSettings").addEventListener("click", saveSettings);
-  $("checkForUpdates").addEventListener("click", checkForUpdates);
-  $("closeCalendar").addEventListener("click", () => $("calendarDialog").close());
-  $("cancelCalendar").addEventListener("click", () => $("calendarDialog").close());
-  $("doImport").addEventListener("click", importCalendar);
-  $("sourceColorCustom").addEventListener("input", () => {
+  $("saveSettings")?.addEventListener("click", saveSettings);
+  $("checkForUpdates")?.addEventListener("click", checkForUpdates);
+  $("closeCalendar")?.addEventListener("click", () => $("calendarDialog").close());
+  $("cancelCalendar")?.addEventListener("click", () => $("calendarDialog").close());
+  $("doImport")?.addEventListener("click", importCalendar);
+  $("sourceColorCustom")?.addEventListener("input", () => {
     $("sourceColor").value = $("sourceColorCustom").value;
     renderSourceColorPalette();
   });
-  $("exitWallMode").addEventListener("click", async () => {
+  $("exitWallMode")?.addEventListener("click", async () => {
     $("settingsDialog").close();
     setStatus("Opening the native calendar…");
     try { await api("/api/exit-wall-mode", { method: "POST" }); }

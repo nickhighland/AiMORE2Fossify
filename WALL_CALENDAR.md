@@ -6,12 +6,12 @@ This checkout is a customized Fossify Calendar for AiMOR digital calendars with 
 
 ```sh
 ./gradlew clean :app:assembleFossDebug
-adb -s <serial> install -r app/build/outputs/apk/foss/debug/calendar-32-foss-debug.apk
+adb -s <serial> install -r app/build/outputs/apk/foss/debug/calendar-33-foss-debug.apk
 ```
 
 The development package is `org.fossify.calendar.debug`. A signed release uses `org.fossify.calendar`; configure a production keystore before distributing it. The setup tool can install a supplied signed release APK.
 
-`app/build/outputs/apk/foss/debug/calendar-32-foss-debug.apk`
+`app/build/outputs/apk/foss/debug/calendar-33-foss-debug.apk`
 
 ## Use
 

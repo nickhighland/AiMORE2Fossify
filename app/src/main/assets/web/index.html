@@ -68,54 +68,17 @@
 
       <aside class="side-panel" aria-label="Calendars and weather">
         <div class="side-heading">
-          <span class="eyebrow">CALENDARS</span>
-          <button id="addCalendar" class="icon-button add-calendar-btn" title="Add calendar" aria-label="Add calendar">＋</button>
+          <div class="side-title-group">
+            <span class="side-icon" aria-hidden="true">📅</span>
+            <h2>Calendars</h2>
+          </div>
+          <div class="side-actions">
+            <button id="addCalendar" class="small-button action-add" title="New calendar" aria-label="New calendar">＋</button>
+            <button id="importCalendar" class="small-button action-import" title="Import ICS" aria-label="Import ICS">↥</button>
+          </div>
         </div>
         <div id="calendarList" class="calendar-list" role="list"></div>
-
-        <section id="weatherWidget" class="weather-widget hidden" aria-label="Weather">
-          <div class="weather-header">
-            <div class="weather-heading">
-              <span id="weatherLocation" class="weather-location">Weather</span>
-              <span id="weatherUpdated" class="weather-updated"></span>
-            </div>
-            <button id="refreshWeather" class="weather-refresh" title="Refresh weather" aria-label="Refresh weather">↻</button>
-          </div>
-          <div class="weather-current">
-            <span id="weatherIcon" class="weather-icon" aria-hidden="true">☀️</span>
-            <div class="weather-primary-stats">
-              <div id="weatherTemp" class="weather-temp">--°</div>
-              <div id="weatherCondition" class="weather-condition">Loading…</div>
-            </div>
-          </div>
-          <div class="weather-stats-grid">
-            <div class="weather-stat-chip">
-              <span class="weather-chip-label">High / Low</span>
-              <span id="weatherHighLow" class="weather-chip-val">--° / --°</span>
-            </div>
-            <div class="weather-stat-chip">
-              <span class="weather-chip-label">Rain Chance</span>
-              <span id="weatherPrecip" class="weather-chip-val">--%</span>
-            </div>
-            <div class="weather-stat-chip">
-              <span class="weather-chip-label">Humidity</span>
-              <span id="weatherHumidity" class="weather-chip-val">--%</span>
-            </div>
-            <div class="weather-stat-chip">
-              <span class="weather-chip-label">Air Quality</span>
-              <span id="weatherAqi" class="weather-chip-val">--</span>
-            </div>
-            <div class="weather-stat-chip">
-              <span class="weather-chip-label">Sunrise / Sunset</span>
-              <span id="weatherSun" class="weather-chip-val">-- / --</span>
-            </div>
-            <div class="weather-stat-chip">
-              <span class="weather-chip-label">Wind</span>
-              <span id="weatherWind" class="weather-chip-val">-- mph</span>
-            </div>
-          </div>
-          <div id="weatherForecast" class="weather-forecast"></div>
-        </section>
+        <section id="weatherWidget" class="weather-widget hidden" aria-label="Weather"></section>
       </aside>
     </section>
   </main>
@@ -125,58 +88,56 @@
     <form id="eventForm" method="dialog">
       <div class="dialog-heading">
         <div class="dialog-title-group">
-          <div class="eyebrow">APPOINTMENT</div>
-          <h2 id="dialogTitle">New Event</h2>
+          <div class="eyebrow">EVENT</div>
+          <h2 id="dialogTitle">New event</h2>
         </div>
-        <button type="button" id="closeEvent" class="close-button" aria-label="Close">×</button>
+        <button type="button" id="closeDialog" class="close-button" aria-label="Close">×</button>
       </div>
+      <input type="hidden" id="eventId">
       <label class="form-field">
         <span class="field-label">Title</span>
-        <input id="title" required maxlength="180" placeholder="e.g. Doctor appointment, Family dinner">
-      </label>
-      <label class="all-day-label">
-        <input id="allDay" type="checkbox">
-        <span class="custom-switch"></span>
-        <span>All day event</span>
+        <input id="eventTitle" required maxlength="500" autocomplete="off" placeholder="Event title…">
       </label>
       <div class="form-row">
         <label class="form-field">
-          <span class="field-label">Start Date</span>
-          <input id="startDate" type="date" required>
+          <span class="field-label">Date</span>
+          <input id="eventDate" type="date" required>
         </label>
-        <label class="form-field" id="startTimeField">
-          <span class="field-label">Start Time</span>
-          <input id="startTime" type="time" value="09:00">
+        <label class="all-day-label">
+          <input id="eventAllDay" type="checkbox">
+          <span class="custom-switch"></span>
+          <span>All day</span>
         </label>
       </div>
-      <div class="form-row">
+      <div class="form-row timed-fields">
         <label class="form-field">
-          <span class="field-label">End Date</span>
-          <input id="endDate" type="date" required>
+          <span class="field-label">Starts</span>
+          <input id="eventStart" type="time" required>
         </label>
-        <label class="form-field" id="endTimeField">
-          <span class="field-label">End Time</span>
-          <input id="endTime" type="time" value="10:00">
+        <label class="form-field">
+          <span class="field-label">Ends</span>
+          <input id="eventEnd" type="time" required>
         </label>
       </div>
-      <label class="form-field">
-        <span class="field-label">Location (optional)</span>
-        <input id="location" maxlength="200" placeholder="e.g. Room 302 or Main Office">
-      </label>
       <label class="form-field">
         <span class="field-label">Calendar</span>
-        <select id="calendarId"></select>
+        <select id="eventCalendar"></select>
+      </label>
+      <p id="eventSourceNote" class="settings-help hidden"></p>
+      <label class="form-field">
+        <span class="field-label">Location</span>
+        <input id="eventLocation" maxlength="1000" autocomplete="off" placeholder="Location or meeting room…">
       </label>
       <label class="form-field">
-        <span class="field-label">Description (optional)</span>
-        <textarea id="description" rows="3" placeholder="Add notes, agenda, or phone numbers…"></textarea>
+        <span class="field-label">Notes</span>
+        <textarea id="eventDescription" rows="3" maxlength="10000" placeholder="Add details or notes…"></textarea>
       </label>
-      <div id="dialogError" class="form-error" role="alert"></div>
+      <div id="formError" class="form-error" role="alert"></div>
       <div class="dialog-actions">
         <button type="button" id="deleteEvent" class="danger hidden">Delete</button>
         <span class="grow"></span>
         <button type="button" id="cancelEvent" class="secondary">Cancel</button>
-        <button type="button" id="saveEvent" class="primary">Save appointment</button>
+        <button type="submit" id="saveEvent" class="primary">Save event</button>
       </div>
     </form>
   </dialog>
