@@ -6,19 +6,19 @@ This checkout is a customized Fossify Calendar for AiMOR digital calendars with 
 
 ```sh
 ./gradlew clean :app:assembleFossDebug
-adb -s <serial> install -r app/build/outputs/apk/foss/debug/calendar-34-foss-debug.apk
+adb -s <serial> install -r app/build/outputs/apk/foss/debug/calendar-36-foss-debug.apk
 ```
 
 The development package is `org.fossify.calendar.debug`. A signed release uses `org.fossify.calendar`; configure a production keystore before distributing it. The setup tool can install a supplied signed release APK.
 
-`app/build/outputs/apk/foss/debug/calendar-34-foss-debug.apk`
+`app/build/outputs/apk/foss/debug/calendar-36-foss-debug.apk`
 
 ## Use
 
 - Wall mode is the default launch surface and stays awake/fullscreen. Its tabbed web Settings modal supports 6 curated themes (Midnight OLED, Nordic Frost, Warm Hearth, Emerald Forest, Sunset Dusk, Minimal Paper), Day and Night modes, corner shape customization (Rounded Modern, Pill Soft, Sharp Minimal), comprehensive in-calendar typography settings (font size scaling from Compact to Huge, top vs. center alignment, font families including Plus Jakarta Sans, Outfit, Inter, Lexend, Roboto, Space Grotesk, System, and font weights), exiting to the native calendar, the start-in-wall toggle, automatic/day/night display mode, adaptive or fixed brightness, portrait/landscape/sensor orientation, and Today-or-Sunday week starts (Today is the default). Appointment slots wrap multi-line text cleanly with minimal margins for maximum visibility across all views.
 - The same UI is available from another device at `http://192.168.4.80:8080` while the calendar app process is running.
 - Settings → Wall calendar contains the start-in-wall toggle, port, LAN address/copy action, and Return to wall view.
-- The web UI supports month, month + day split, week, and agenda views; previous/next arrows move by month, day, or week as appropriate; event text is enlarged for wall readability; and Settings can switch Week and Agenda to an hourly time grid with configurable start/end hours. Week uses seven horizontally scrollable day columns, Agenda uses a single-day schedule, timed events are positioned within hourly blocks, and all-day events share one aligned row above the grid. The UI also provides 15-second polling; local calendar visibility/color/name management; calendar color pickers; an option to hide the built-in Local calendar from the sidebar; calendar deletion with confirmation (including its events/tasks); and event create/edit/delete. Event bars use their calendar's color in every view.
+- The web UI supports month, month + day split, week, and agenda views; previous/next arrows move by month, day, or week as appropriate; event text is enlarged for wall readability; and Settings can switch Week and Agenda to an hourly time grid with configurable start/end hours. Week uses seven horizontally scrollable day columns, Agenda uses a single-day schedule, timed events are positioned within hourly blocks, and all-day events share one aligned row above the grid. The UI also provides 15-second polling; local calendar visibility/color/name management; calendar color pickers; options to hide the built-in Local calendar and the New event button; calendar deletion with confirmation (including its events/tasks); and event create/edit/delete. Event bars use their calendar's color in every view.
 - The LAN page includes a web-app manifest, standalone mobile metadata, a custom calendar icon, and a shell service worker for adding it to an Android or iOS phone homescreen. A true OS home-screen widget is platform-specific and is not the same as this installable web app.
 - The native wall app shows the weather card in both portrait and landscape, pinned to the bottom of the right-hand column. The LAN web interface omits the weather card so phone/computer calendar management stays focused. If the calendar list grows beyond the available column height in the native app, it scrolls independently without moving or covering the weather card.
 + Add `.ics` sources as two-way (incoming + outgoing edits), one-way (incoming only), or read-only snapshots. The New event button is hidden when every visible calendar is incoming-only/read-only. HTTP(S) feeds refresh at least every 15 minutes through WorkManager and can be synced immediately with the ↻ button. Read-only calendars are protected from edits/deletes in both the web API and the native helper.

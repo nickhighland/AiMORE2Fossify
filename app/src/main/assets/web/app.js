@@ -33,6 +33,7 @@
       weekAgendaLayout: "list",
       timeGridStart: 7,
       timeGridEnd: 22,
+      showNewEvent: true,
       eventFontSize: "normal",
       eventAlign: "top",
       eventFontFamily: "plus-jakarta",
@@ -203,6 +204,7 @@
       $("weekStart").value = state.settings.weekStart || "today";
       $("startWallMode").checked = state.settings.startWallMode !== false;
       $("showLocalCalendar").checked = state.settings.showLocalCalendar !== false;
+      $("showNewEvent").checked = state.settings.showNewEvent !== false;
       $("defaultView").value = isWallView(state.settings.defaultView) ? normalizeView(state.settings.defaultView) : "month";
       $("weekAgendaLayout").value = state.settings.weekAgendaLayout === "timegrid" ? "timegrid" : "list";
       $("timeGridStart").value = String(Number.isFinite(Number(state.settings.timeGridStart)) ? state.settings.timeGridStart : 7);
@@ -315,7 +317,7 @@
     $("agendaView").classList.toggle("hidden", state.view !== "agenda");
     
     renderCalendars();
-    $("newEvent").classList.toggle("hidden", !state.calendars.some((calendar) => calendar.visible && calendar.outgoingEnabled !== false && !calendar.synced && !calendar.readOnly));
+    $("newEvent").classList.toggle("hidden", state.settings.showNewEvent === false || !state.calendars.some((calendar) => calendar.visible && calendar.outgoingEnabled !== false && !calendar.synced && !calendar.readOnly));
     renderWeather();
     
     if (state.view === "month") renderMonth();
@@ -771,6 +773,7 @@
     $("weekStart").value = state.settings.weekStart || "today";
     $("startWallMode").checked = state.settings.startWallMode !== false;
     $("showLocalCalendar").checked = state.settings.showLocalCalendar !== false;
+    $("showNewEvent").checked = state.settings.showNewEvent !== false;
     $("defaultView").value = isWallView(state.settings.defaultView) ? normalizeView(state.settings.defaultView) : "month";
     $("weekAgendaLayout").value = state.settings.weekAgendaLayout === "timegrid" ? "timegrid" : "list";
     $("timeGridStart").value = String(Number.isFinite(Number(state.settings.timeGridStart)) ? state.settings.timeGridStart : 7);
@@ -839,6 +842,7 @@
           weekStart: $("weekStart").value,
           startWallMode: $("startWallMode").checked,
           showLocalCalendar: $("showLocalCalendar").checked,
+          showNewEvent: $("showNewEvent").checked,
           defaultView: normalizeView($("defaultView").value),
           weekAgendaLayout: $("weekAgendaLayout").value,
           timeGridStart: Number($("timeGridStart").value),

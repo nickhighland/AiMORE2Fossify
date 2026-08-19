@@ -186,6 +186,7 @@ private class CalendarHttpServer(
             put("orientation", config.wallOrientation)
             put("weekStart", config.wallWeekStart)
             put("showLocalCalendar", config.wallShowLocalCalendar)
+            put("showNewEvent", config.wallShowNewEvent)
             put("defaultView", config.wallDefaultView)
             put("weekAgendaLayout", config.wallWeekAgendaLayout)
             put("timeGridStart", config.wallTimeGridStart)
@@ -257,6 +258,9 @@ private class CalendarHttpServer(
         }
         if (body.has("showLocalCalendar")) {
             config.wallShowLocalCalendar = body.optBoolean("showLocalCalendar", true)
+        }
+        if (body.has("showNewEvent")) {
+            config.wallShowNewEvent = body.optBoolean("showNewEvent", true)
         }
         if (body.has("defaultView")) {
             val requestedView = body.optString("defaultView").lowercase()

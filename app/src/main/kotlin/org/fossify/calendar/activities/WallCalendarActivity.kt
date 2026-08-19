@@ -148,6 +148,7 @@ class WallCalendarActivity : SimpleActivity() {
                 .put("adaptiveBrightness", config.wallAdaptiveBrightness)
                 .put("orientation", config.wallOrientation)
                 .put("weekStart", config.wallWeekStart)
+                .put("showNewEvent", config.wallShowNewEvent)
                 .put("defaultView", config.wallDefaultView)
                 .put("weekAgendaLayout", config.wallWeekAgendaLayout)
                 .put("timeGridStart", config.wallTimeGridStart)

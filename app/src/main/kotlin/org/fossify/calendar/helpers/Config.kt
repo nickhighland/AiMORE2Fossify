@@ -66,6 +66,10 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getBoolean(WALL_SHOW_LOCAL_CALENDAR, true)
         set(show) = prefs.edit().putBoolean(WALL_SHOW_LOCAL_CALENDAR, show).apply()
 
+    var wallShowNewEvent: Boolean
+        get() = prefs.getBoolean(WALL_SHOW_NEW_EVENT, true)
+        set(show) = prefs.edit().putBoolean(WALL_SHOW_NEW_EVENT, show).apply()
+
     var wallDefaultView: String
         get() = when (prefs.getString(WALL_DEFAULT_VIEW, "month")?.lowercase()) {
             "weekly" -> "week"

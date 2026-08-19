@@ -78,7 +78,7 @@ When the app starts, it opens Wall Calendar mode. Open the displayed LAN address
 http://192.168.4.80:8080
 ~~~
 
-The web Settings menu controls startup mode, default view, orientation, brightness, week start, Local-calendar visibility, weather ZIP code, weather label, and the Week/Agenda layout. Selecting Hourly time grid exposes start/end hour controls; Week shows seven timed columns and Agenda shows a single-day timed schedule. The native wall app keeps the weather card pinned to the bottom of the right-hand column in either orientation; a long calendar list scrolls without covering or moving it. The LAN web interface omits the weather card and keeps its source attribution in the Settings footnote.
+The web Settings menu controls startup mode, default view, orientation, brightness, week start, Local-calendar visibility, New Event button visibility, weather ZIP code, weather label, and the Week/Agenda layout. Selecting Hourly time grid exposes start/end hour controls; Week shows seven timed columns and Agenda shows a single-day timed schedule. The native wall app uses the full landscape viewport while keeping the calendars/weather column fixed-width, and keeps the weather card pinned to the bottom of that column in either orientation; a long calendar list scrolls without covering or moving it. The LAN web interface omits the weather card and keeps its source attribution in the Settings footnote.
 
 ICS sources can be added as two-way (incoming + outgoing edits), one-way (incoming only), or read-only snapshots. The New event button is shown only when at least one visible calendar allows outgoing changes. HTTP(S) feeds refresh at least every 15 minutes. Read-only calendars cannot be edited or deleted from the web interface.
 
