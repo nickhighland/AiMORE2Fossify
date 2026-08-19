@@ -10,13 +10,13 @@
   <title>Wall Calendar</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icons/calendar.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icons/calendar.svg">
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body data-theme="midnight" data-shape="rounded">
+<body data-theme="midnight" data-shape="rounded" data-event-size="normal" data-event-align="top" data-event-font="plus-jakarta" data-event-weight="semibold">
   <div class="ambient-glow" aria-hidden="true"></div>
 
   <header class="topbar">
@@ -65,19 +65,57 @@
         <div id="weekView" class="week-view hidden"></div>
         <div id="agendaView" class="agenda-view hidden"></div>
       </section>
-      <aside class="side-panel">
+
+      <aside class="side-panel" aria-label="Calendars and weather">
         <div class="side-heading">
-          <div class="side-title-group">
-            <span class="side-icon" aria-hidden="true">📅</span>
-            <h2>Calendars</h2>
-          </div>
-          <div class="side-actions">
-            <button id="addCalendar" class="small-button action-add" title="New calendar" aria-label="New calendar">＋</button>
-            <button id="importCalendar" class="small-button action-import" title="Import ICS" aria-label="Import ICS">↥</button>
-          </div>
+          <span class="eyebrow">CALENDARS</span>
+          <button id="addCalendar" class="icon-button add-calendar-btn" title="Add calendar" aria-label="Add calendar">＋</button>
         </div>
-        <div id="calendarList" class="calendar-list"></div>
-        <section id="weatherWidget" class="weather-widget hidden" aria-label="Weather"></section>
+        <div id="calendarList" class="calendar-list" role="list"></div>
+
+        <section id="weatherWidget" class="weather-widget hidden" aria-label="Weather">
+          <div class="weather-header">
+            <div class="weather-heading">
+              <span id="weatherLocation" class="weather-location">Weather</span>
+              <span id="weatherUpdated" class="weather-updated"></span>
+            </div>
+            <button id="refreshWeather" class="weather-refresh" title="Refresh weather" aria-label="Refresh weather">↻</button>
+          </div>
+          <div class="weather-current">
+            <span id="weatherIcon" class="weather-icon" aria-hidden="true">☀️</span>
+            <div class="weather-primary-stats">
+              <div id="weatherTemp" class="weather-temp">--°</div>
+              <div id="weatherCondition" class="weather-condition">Loading…</div>
+            </div>
+          </div>
+          <div class="weather-stats-grid">
+            <div class="weather-stat-chip">
+              <span class="weather-chip-label">High / Low</span>
+              <span id="weatherHighLow" class="weather-chip-val">--° / --°</span>
+            </div>
+            <div class="weather-stat-chip">
+              <span class="weather-chip-label">Rain Chance</span>
+              <span id="weatherPrecip" class="weather-chip-val">--%</span>
+            </div>
+            <div class="weather-stat-chip">
+              <span class="weather-chip-label">Humidity</span>
+              <span id="weatherHumidity" class="weather-chip-val">--%</span>
+            </div>
+            <div class="weather-stat-chip">
+              <span class="weather-chip-label">Air Quality</span>
+              <span id="weatherAqi" class="weather-chip-val">--</span>
+            </div>
+            <div class="weather-stat-chip">
+              <span class="weather-chip-label">Sunrise / Sunset</span>
+              <span id="weatherSun" class="weather-chip-val">-- / --</span>
+            </div>
+            <div class="weather-stat-chip">
+              <span class="weather-chip-label">Wind</span>
+              <span id="weatherWind" class="weather-chip-val">-- mph</span>
+            </div>
+          </div>
+          <div id="weatherForecast" class="weather-forecast"></div>
+        </section>
       </aside>
     </section>
   </main>
@@ -87,215 +125,322 @@
     <form id="eventForm" method="dialog">
       <div class="dialog-heading">
         <div class="dialog-title-group">
-          <div class="eyebrow">EVENT</div>
-          <h2 id="dialogTitle">New event</h2>
+          <div class="eyebrow">APPOINTMENT</div>
+          <h2 id="dialogTitle">New Event</h2>
         </div>
-        <button type="button" id="closeDialog" class="close-button" aria-label="Close">×</button>
+        <button type="button" id="closeEvent" class="close-button" aria-label="Close">×</button>
       </div>
-      <input type="hidden" id="eventId">
       <label class="form-field">
         <span class="field-label">Title</span>
-        <input id="eventTitle" required maxlength="500" autocomplete="off" placeholder="Event title…">
+        <input id="title" required maxlength="180" placeholder="e.g. Doctor appointment, Family dinner">
+      </label>
+      <label class="all-day-label">
+        <input id="allDay" type="checkbox">
+        <span class="custom-switch"></span>
+        <span>All day event</span>
       </label>
       <div class="form-row">
         <label class="form-field">
-          <span class="field-label">Date</span>
-          <input id="eventDate" type="date" required>
+          <span class="field-label">Start Date</span>
+          <input id="startDate" type="date" required>
         </label>
-        <label class="all-day-label">
-          <input id="eventAllDay" type="checkbox">
-          <span class="custom-switch"></span>
-          <span>All day</span>
-        </label>
-      </div>
-      <div class="form-row timed-fields">
-        <label class="form-field">
-          <span class="field-label">Starts</span>
-          <input id="eventStart" type="time" required>
-        </label>
-        <label class="form-field">
-          <span class="field-label">Ends</span>
-          <input id="eventEnd" type="time" required>
+        <label class="form-field" id="startTimeField">
+          <span class="field-label">Start Time</span>
+          <input id="startTime" type="time" value="09:00">
         </label>
       </div>
+      <div class="form-row">
+        <label class="form-field">
+          <span class="field-label">End Date</span>
+          <input id="endDate" type="date" required>
+        </label>
+        <label class="form-field" id="endTimeField">
+          <span class="field-label">End Time</span>
+          <input id="endTime" type="time" value="10:00">
+        </label>
+      </div>
+      <label class="form-field">
+        <span class="field-label">Location (optional)</span>
+        <input id="location" maxlength="200" placeholder="e.g. Room 302 or Main Office">
+      </label>
       <label class="form-field">
         <span class="field-label">Calendar</span>
-        <select id="eventCalendar"></select>
-      </label>
-      <p id="eventSourceNote" class="settings-help hidden"></p>
-      <label class="form-field">
-        <span class="field-label">Location</span>
-        <input id="eventLocation" maxlength="1000" autocomplete="off" placeholder="Location or meeting room…">
+        <select id="calendarId"></select>
       </label>
       <label class="form-field">
-        <span class="field-label">Notes</span>
-        <textarea id="eventDescription" rows="3" maxlength="10000" placeholder="Add details or notes…"></textarea>
+        <span class="field-label">Description (optional)</span>
+        <textarea id="description" rows="3" placeholder="Add notes, agenda, or phone numbers…"></textarea>
       </label>
-      <div id="formError" class="form-error" role="alert"></div>
+      <div id="dialogError" class="form-error" role="alert"></div>
       <div class="dialog-actions">
         <button type="button" id="deleteEvent" class="danger hidden">Delete</button>
         <span class="grow"></span>
         <button type="button" id="cancelEvent" class="secondary">Cancel</button>
-        <button type="submit" id="saveEvent" class="primary">Save event</button>
+        <button type="button" id="saveEvent" class="primary">Save appointment</button>
       </div>
     </form>
   </dialog>
 
-  <!-- SETTINGS DIALOG -->
+  <!-- SETTINGS DIALOG (TABBED INTERFACE) -->
   <dialog id="settingsDialog" class="settings-dialog modal-surface">
     <form id="settingsForm" method="dialog">
       <div class="dialog-heading">
         <div class="dialog-title-group">
           <div class="eyebrow">WALL CALENDAR</div>
-          <h2>Display &amp; Appearance</h2>
+          <h2>Calendar Settings</h2>
         </div>
         <button type="button" id="closeSettings" class="close-button" aria-label="Close">×</button>
       </div>
 
-      <div class="settings-section">
-        <h3 class="section-title">Theme &amp; Style</h3>
-        <div class="theme-picker-grid" role="radiogroup" aria-label="Theme Selection">
-          <button type="button" class="theme-card active" data-theme-choice="midnight">
-            <span class="theme-preview midnight-preview"></span>
-            <span class="theme-name">Midnight OLED</span>
-          </button>
-          <button type="button" class="theme-card" data-theme-choice="frost">
-            <span class="theme-preview frost-preview"></span>
-            <span class="theme-name">Nordic Frost</span>
-          </button>
-          <button type="button" class="theme-card" data-theme-choice="hearth">
-            <span class="theme-preview hearth-preview"></span>
-            <span class="theme-name">Warm Hearth</span>
-          </button>
-          <button type="button" class="theme-card" data-theme-choice="botanical">
-            <span class="theme-preview botanical-preview"></span>
-            <span class="theme-name">Emerald Forest</span>
-          </button>
-          <button type="button" class="theme-card" data-theme-choice="twilight">
-            <span class="theme-preview twilight-preview"></span>
-            <span class="theme-name">Sunset Dusk</span>
-          </button>
-          <button type="button" class="theme-card" data-theme-choice="minimal">
-            <span class="theme-preview minimal-preview"></span>
-            <span class="theme-name">Minimal Paper</span>
-          </button>
+      <!-- TAB NAVIGATION -->
+      <nav class="settings-tabs-nav" role="tablist" aria-label="Settings Categories">
+        <button type="button" class="settings-tab-btn active" role="tab" aria-selected="true" data-tab="appearance">🎨 Appearance</button>
+        <button type="button" class="settings-tab-btn" role="tab" aria-selected="false" data-tab="typography">🔤 Typography</button>
+        <button type="button" class="settings-tab-btn" role="tab" aria-selected="false" data-tab="layout">📅 Layout &amp; Views</button>
+        <button type="button" class="settings-tab-btn" role="tab" aria-selected="false" data-tab="hardware">⚙️ Hardware &amp; Weather</button>
+        <button type="button" class="settings-tab-btn" role="tab" aria-selected="false" data-tab="about">ℹ️ About &amp; Updates</button>
+      </nav>
+
+      <div class="settings-tab-content">
+        <!-- 1. APPEARANCE TAB -->
+        <div class="settings-tab-panel active" data-tab-panel="appearance">
+          <div class="settings-section">
+            <h3 class="section-title">Theme &amp; Style</h3>
+            <div class="theme-picker-grid" role="radiogroup" aria-label="Theme Selection">
+              <button type="button" class="theme-card active" data-theme-choice="midnight">
+                <span class="theme-preview midnight-preview"></span>
+                <span class="theme-name">Midnight OLED</span>
+              </button>
+              <button type="button" class="theme-card" data-theme-choice="frost">
+                <span class="theme-preview frost-preview"></span>
+                <span class="theme-name">Nordic Frost</span>
+              </button>
+              <button type="button" class="theme-card" data-theme-choice="hearth">
+                <span class="theme-preview hearth-preview"></span>
+                <span class="theme-name">Warm Hearth</span>
+              </button>
+              <button type="button" class="theme-card" data-theme-choice="botanical">
+                <span class="theme-preview botanical-preview"></span>
+                <span class="theme-name">Emerald Forest</span>
+              </button>
+              <button type="button" class="theme-card" data-theme-choice="twilight">
+                <span class="theme-preview twilight-preview"></span>
+                <span class="theme-name">Sunset Dusk</span>
+              </button>
+              <button type="button" class="theme-card" data-theme-choice="minimal">
+                <span class="theme-preview minimal-preview"></span>
+                <span class="theme-name">Minimal Paper</span>
+              </button>
+            </div>
+            <input type="hidden" id="wallThemeChoice" value="midnight">
+          </div>
+
+          <div class="settings-section">
+            <h3 class="section-title">Corner Shape &amp; Geometry</h3>
+            <div class="shape-picker-row" role="radiogroup" aria-label="Corner Shape Selection">
+              <button type="button" class="shape-card active" data-shape-choice="rounded">
+                <span class="shape-icon shape-rounded-icon"></span>
+                <span class="shape-name">Rounded Modern</span>
+              </button>
+              <button type="button" class="shape-card" data-shape-choice="pill">
+                <span class="shape-icon shape-pill-icon"></span>
+                <span class="shape-name">Pill Soft</span>
+              </button>
+              <button type="button" class="shape-card" data-shape-choice="sharp">
+                <span class="shape-icon shape-sharp-icon"></span>
+                <span class="shape-name">Sharp Minimal</span>
+              </button>
+            </div>
+            <input type="hidden" id="wallShapeChoice" value="rounded">
+          </div>
+
+          <div class="settings-section">
+            <h3 class="section-title">Day / Night Mode</h3>
+            <label class="form-field">
+              <span class="field-label">Display mode</span>
+              <select id="displayMode">
+                <option value="auto">Automatic day / night</option>
+                <option value="day">Day mode (Light)</option>
+                <option value="night">Night mode (Dark)</option>
+              </select>
+            </label>
+          </div>
         </div>
-        <input type="hidden" id="wallThemeChoice" value="midnight">
+
+        <!-- 2. TYPOGRAPHY & APPOINTMENTS TAB -->
+        <div class="settings-tab-panel" data-tab-panel="typography">
+          <div class="settings-section">
+            <h3 class="section-title">In-Calendar Text &amp; Appointments</h3>
+            <div class="settings-grid">
+              <label class="form-field">
+                <span class="field-label">Appointment text size</span>
+                <select id="eventFontSize">
+                  <option value="compact">Compact (88%)</option>
+                  <option value="normal" selected>Normal (100% - Default)</option>
+                  <option value="large">Large (115%)</option>
+                  <option value="xlarge">Extra Large (130%)</option>
+                  <option value="huge">Huge (145%)</option>
+                </select>
+              </label>
+
+              <label class="form-field">
+                <span class="field-label">Appointment content alignment</span>
+                <select id="eventAlign">
+                  <option value="top" selected>Top-aligned (Timeline standard)</option>
+                  <option value="center">Center-aligned (Vertically centered)</option>
+                </select>
+              </label>
+
+              <label class="form-field">
+                <span class="field-label">In-calendar font family</span>
+                <select id="eventFontFamily">
+                  <option value="plus-jakarta" selected>Plus Jakarta Sans (Modern Clean)</option>
+                  <option value="outfit">Outfit (Geometric Display)</option>
+                  <option value="inter">Inter (High Legibility Grotesque)</option>
+                  <option value="lexend">Lexend (Enhanced Reading)</option>
+                  <option value="roboto">Roboto (Classic Grotesque)</option>
+                  <option value="space-grotesk">Space Grotesk (Tech Display)</option>
+                  <option value="system">System Default</option>
+                </select>
+              </label>
+
+              <label class="form-field">
+                <span class="field-label">Appointment font weight</span>
+                <select id="eventFontWeight">
+                  <option value="normal">Regular (400)</option>
+                  <option value="medium">Medium (500)</option>
+                  <option value="semibold" selected>Semi-Bold (600)</option>
+                  <option value="bold">Bold (700)</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3 class="section-title">Live Appointment Preview</h3>
+            <div class="typography-preview-container">
+              <div class="typography-preview-label">Sample Slot &amp; Multi-line Wrapping</div>
+              <div id="typographyPreviewCard" class="typography-preview-card" style="--event-color:#3b82f6;">
+                <span class="preview-event-title">Dentist Appointment &amp; Annual Checkup with Dr. Smith</span>
+                <span class="preview-event-time">10:00 AM – 11:30 AM</span>
+                <span class="preview-event-location">📍 Suite 420, Medical Arts Pavilion</span>
+              </div>
+            </div>
+            <p class="settings-help">All appointment slots wrap multi-line text cleanly and use tight margins so full titles, times, and locations are clearly readable from across the room.</p>
+          </div>
+        </div>
+
+        <!-- 3. LAYOUT & VIEWS TAB -->
+        <div class="settings-tab-panel" data-tab-panel="layout">
+          <div class="settings-section">
+            <h3 class="section-title">Calendar Views &amp; Schedule</h3>
+            <div class="settings-grid">
+              <label class="form-field">
+                <span class="field-label">Default view on startup</span>
+                <select id="defaultView">
+                  <option value="month">Month</option>
+                  <option value="monthday">Month + day</option>
+                  <option value="week">Week</option>
+                  <option value="agenda">Agenda</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span class="field-label">Week view starts</span>
+                <select id="weekStart">
+                  <option value="today">Today (Rolling week)</option>
+                  <option value="sunday">Sunday</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span class="field-label">Week &amp; agenda layout</span>
+                <select id="weekAgendaLayout">
+                  <option value="list">Event list</option>
+                  <option value="timegrid">Hourly time grid</option>
+                </select>
+              </label>
+              <label class="check-setting">
+                <input id="startWallMode" type="checkbox">
+                <span class="custom-switch"></span>
+                <span>Start in wall mode on launch</span>
+              </label>
+              <label class="form-field">
+                <span class="field-label">Time grid starts</span>
+                <select id="timeGridStart"></select>
+              </label>
+              <label class="form-field">
+                <span class="field-label">Time grid ends</span>
+                <select id="timeGridEnd"></select>
+              </label>
+              <label class="check-setting">
+                <input id="showLocalCalendar" type="checkbox">
+                <span class="custom-switch"></span>
+                <span>Show Local calendar in sidebar</span>
+              </label>
+            </div>
+            <p class="settings-help">Hourly time-grid mode arranges timed events into precise hourly blocks; all-day events remain in a dedicated compact row above the grid.</p>
+          </div>
+        </div>
+
+        <!-- 4. HARDWARE & WEATHER TAB -->
+        <div class="settings-tab-panel" data-tab-panel="hardware">
+          <div class="settings-section">
+            <h3 class="section-title">Screen &amp; Orientation</h3>
+            <div class="settings-grid">
+              <label class="form-field">
+                <span class="field-label">Wall orientation</span>
+                <select id="wallOrientation">
+                  <option value="landscape">Landscape</option>
+                  <option value="portrait">Portrait</option>
+                  <option value="auto">Automatic sensor</option>
+                </select>
+              </label>
+              <label class="check-setting">
+                <input id="adaptiveBrightness" type="checkbox">
+                <span class="custom-switch"></span>
+                <span>Adaptive screen brightness</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3 class="section-title">Weather Station</h3>
+            <div class="settings-grid">
+              <label class="form-field">
+                <span class="field-label">Weather ZIP code</span>
+                <input id="weatherZip" maxlength="16" inputmode="numeric" placeholder="e.g. 14623">
+              </label>
+              <label class="form-field">
+                <span class="field-label">Location label</span>
+                <input id="weatherLabel" maxlength="120" placeholder="e.g. Home or Rochester, NY">
+              </label>
+            </div>
+            <p class="settings-footnote">Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Air quality: <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noreferrer">Copernicus CAMS ENSEMBLE</a>.</p>
+          </div>
+        </div>
+
+        <!-- 5. ABOUT & UPDATES TAB -->
+        <div class="settings-tab-panel" data-tab-panel="about">
+          <div class="settings-section">
+            <h3 class="section-title">Software Updates</h3>
+            <div class="settings-update-row">
+              <button type="button" id="checkForUpdates" class="secondary">Check for updates</button>
+              <span id="updateStatus" class="settings-help" role="status"></span>
+            </div>
+            <p class="settings-help">The wall calendar automatically checks GitHub Releases once daily and presents an installation prompt when a newer version is released.</p>
+          </div>
+
+          <div class="settings-section">
+            <h3 class="section-title">System Control</h3>
+            <div class="settings-update-row">
+              <button type="button" id="exitWallMode" class="secondary danger-subtle">Exit wall mode</button>
+            </div>
+            <p class="settings-help">Returns to standard Android interface and launcher.</p>
+          </div>
+        </div>
       </div>
 
-      <div class="settings-section">
-        <h3 class="section-title">Corner Shape &amp; Geometry</h3>
-        <div class="shape-picker-row" role="radiogroup" aria-label="Corner Shape Selection">
-          <button type="button" class="shape-card active" data-shape-choice="rounded">
-            <span class="shape-icon shape-rounded-icon"></span>
-            <span class="shape-name">Rounded Modern</span>
-          </button>
-          <button type="button" class="shape-card" data-shape-choice="pill">
-            <span class="shape-icon shape-pill-icon"></span>
-            <span class="shape-name">Pill Soft</span>
-          </button>
-          <button type="button" class="shape-card" data-shape-choice="sharp">
-            <span class="shape-icon shape-sharp-icon"></span>
-            <span class="shape-name">Sharp Minimal</span>
-          </button>
-        </div>
-        <input type="hidden" id="wallShapeChoice" value="rounded">
-      </div>
-
-      <div class="settings-section">
-        <h3 class="section-title">Display &amp; Layout</h3>
-        <div class="settings-grid">
-          <label class="form-field">
-            <span class="field-label">Display mode</span>
-            <select id="displayMode">
-              <option value="auto">Automatic day / night</option>
-              <option value="day">Day</option>
-              <option value="night">Night</option>
-            </select>
-          </label>
-          <label class="form-field">
-            <span class="field-label">Wall orientation</span>
-            <select id="wallOrientation">
-              <option value="landscape">Landscape</option>
-              <option value="portrait">Portrait</option>
-              <option value="auto">Automatic sensor</option>
-            </select>
-          </label>
-          <label class="check-setting">
-            <input id="adaptiveBrightness" type="checkbox">
-            <span class="custom-switch"></span>
-            <span>Adaptive screen brightness</span>
-          </label>
-          <label class="form-field">
-            <span class="field-label">Week view starts</span>
-            <select id="weekStart">
-              <option value="today">Today</option>
-              <option value="sunday">Sunday</option>
-            </select>
-          </label>
-          <label class="check-setting">
-            <input id="startWallMode" type="checkbox">
-            <span class="custom-switch"></span>
-            <span>Start in wall mode on launch</span>
-          </label>
-          <label class="check-setting">
-            <input id="showLocalCalendar" type="checkbox">
-            <span class="custom-switch"></span>
-            <span>Show Local calendar in sidebar</span>
-          </label>
-          <label class="form-field">
-            <span class="field-label">Default view on startup</span>
-            <select id="defaultView">
-              <option value="month">Month</option>
-              <option value="monthday">Month + day</option>
-              <option value="week">Week</option>
-              <option value="agenda">Agenda</option>
-            </select>
-          </label>
-          <label class="form-field">
-            <span class="field-label">Week &amp; agenda layout</span>
-            <select id="weekAgendaLayout">
-              <option value="list">Event list</option>
-              <option value="timegrid">Hourly time grid</option>
-            </select>
-          </label>
-          <label class="form-field">
-            <span class="field-label">Time grid starts</span>
-            <select id="timeGridStart"></select>
-          </label>
-          <label class="form-field">
-            <span class="field-label">Time grid ends</span>
-            <select id="timeGridEnd"></select>
-          </label>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <h3 class="section-title">Weather Station</h3>
-        <div class="settings-grid">
-          <label class="form-field">
-            <span class="field-label">Weather ZIP code</span>
-            <input id="weatherZip" maxlength="16" inputmode="numeric" placeholder="e.g. 14623">
-          </label>
-          <label class="form-field">
-            <span class="field-label">Location label</span>
-            <input id="weatherLabel" maxlength="120" placeholder="e.g. Home or Rochester, NY">
-          </label>
-        </div>
-      </div>
-
-      <p class="settings-help">Hourly time-grid mode uses one block per hour. Timed events are placed by their start and end times; all-day events remain above the hourly rows.</p>
-      
-      <div class="settings-update-row">
-        <button type="button" id="checkForUpdates" class="secondary">Check for updates</button>
-        <span id="updateStatus" class="settings-help" role="status"></span>
-      </div>
-      
-      <p class="settings-footnote">Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Air quality: <a href="https://atmosphere.copernicus.eu/" target="_blank" rel="noreferrer">Copernicus CAMS ENSEMBLE</a>.</p>
-      <div id="settingsError" class="form-error" role="alert"></div>
-      
       <div class="dialog-actions">
-        <button type="button" id="exitWallMode" class="secondary">Exit wall mode</button>
+        <div id="settingsError" class="form-error" role="alert"></div>
         <span class="grow"></span>
         <button type="button" id="cancelSettings" class="secondary">Close</button>
         <button type="button" id="saveSettings" class="primary">Save settings</button>

@@ -6,6 +6,10 @@
 
   const THEMES = ["midnight", "frost", "hearth", "botanical", "twilight", "minimal"];
   const SHAPES = ["rounded", "pill", "sharp"];
+  const EVENT_FONT_SIZES = ["compact", "normal", "large", "xlarge", "huge"];
+  const EVENT_ALIGNS = ["top", "center"];
+  const EVENT_FONTS = ["plus-jakarta", "outfit", "inter", "lexend", "roboto", "space-grotesk", "system"];
+  const EVENT_WEIGHTS = ["normal", "medium", "semibold", "bold"];
 
   const state = {
     date: new Date(),
@@ -28,7 +32,11 @@
       defaultView: "month",
       weekAgendaLayout: "list",
       timeGridStart: 7,
-      timeGridEnd: 22
+      timeGridEnd: 22,
+      eventFontSize: "normal",
+      eventAlign: "top",
+      eventFontFamily: "plus-jakarta",
+      eventFontWeight: "semibold"
     }
   };
   const $ = (id) => document.getElementById(id);
@@ -144,6 +152,22 @@
     return SHAPES.includes(settings.shape) ? settings.shape : "rounded";
   }
 
+  function effectiveEventFontSize(settings = state.settings) {
+    return EVENT_FONT_SIZES.includes(settings.eventFontSize) ? settings.eventFontSize : "normal";
+  }
+
+  function effectiveEventAlign(settings = state.settings) {
+    return EVENT_ALIGNS.includes(settings.eventAlign) ? settings.eventAlign : "top";
+  }
+
+  function effectiveEventFontFamily(settings = state.settings) {
+    return EVENT_FONTS.includes(settings.eventFontFamily) ? settings.eventFontFamily : "plus-jakarta";
+  }
+
+  function effectiveEventFontWeight(settings = state.settings) {
+    return EVENT_WEIGHTS.includes(settings.eventFontWeight) ? settings.eventFontWeight : "semibold";
+  }
+
   function applyWallSettings(settings) {
     const incomingSettings = settings || {};
     const previousDefaultView = normalizeView(state.settings.defaultView);
@@ -158,10 +182,18 @@
     const currentTheme = effectiveTheme(state.settings);
     const currentMode = effectiveMode(state.settings);
     const currentShape = effectiveShape(state.settings);
+    const currentEventSize = effectiveEventFontSize(state.settings);
+    const currentEventAlign = effectiveEventAlign(state.settings);
+    const currentEventFont = effectiveEventFontFamily(state.settings);
+    const currentEventWeight = effectiveEventFontWeight(state.settings);
 
     document.body.dataset.theme = currentTheme;
     document.body.dataset.mode = currentMode;
     document.body.dataset.shape = currentShape;
+    document.body.dataset.eventSize = currentEventSize;
+    document.body.dataset.eventAlign = currentEventAlign;
+    document.body.dataset.eventFont = currentEventFont;
+    document.body.dataset.eventWeight = currentEventWeight;
 
     // Sync settings form inputs if open/rendered
     if ($("displayMode")) {
@@ -175,6 +207,10 @@
       $("weekAgendaLayout").value = state.settings.weekAgendaLayout === "timegrid" ? "timegrid" : "list";
       $("timeGridStart").value = String(Number.isFinite(Number(state.settings.timeGridStart)) ? state.settings.timeGridStart : 7);
       $("timeGridEnd").value = String(Number.isFinite(Number(state.settings.timeGridEnd)) ? state.settings.timeGridEnd : 22);
+      if ($("eventFontSize")) $("eventFontSize").value = currentEventSize;
+      if ($("eventAlign")) $("eventAlign").value = currentEventAlign;
+      if ($("eventFontFamily")) $("eventFontFamily").value = currentEventFont;
+      if ($("eventFontWeight")) $("eventFontWeight").value = currentEventWeight;
       
       const themeChoiceInput = $("wallThemeChoice");
       if (themeChoiceInput) themeChoiceInput.value = currentTheme;
@@ -781,6 +817,10 @@
           weekAgendaLayout: $("weekAgendaLayout").value,
           timeGridStart: Number($("timeGridStart").value),
           timeGridEnd: Number($("timeGridEnd").value),
+          eventFontSize: $("eventFontSize") ? $("eventFontSize").value : "normal",
+          eventAlign: $("eventAlign") ? $("eventAlign").value : "top",
+          eventFontFamily: $("eventFontFamily") ? $("eventFontFamily").value : "plus-jakarta",
+          eventFontWeight: $("eventFontWeight") ? $("eventFontWeight").value : "semibold",
           weatherZip: $("weatherZip").value.trim(),
           weatherLabel: $("weatherLabel").value.trim()
         })
@@ -870,6 +910,34 @@
       $("wallShapeChoice").value = chosenShape;
       document.body.dataset.shape = chosenShape;
     });
+  });
+
+  // Settings Tab Navigation
+  document.querySelectorAll(".settings-tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".settings-tab-btn").forEach((b) => {
+        b.classList.remove("active");
+        b.setAttribute("aria-selected", "false");
+      });
+      document.querySelectorAll(".settings-tab-panel").forEach((p) => p.classList.remove("active"));
+      btn.classList.add("active");
+      btn.setAttribute("aria-selected", "true");
+      const targetPanel = document.querySelector(`[data-tab-panel="${btn.dataset.tab}"]`);
+      if (targetPanel) targetPanel.classList.add("active");
+    });
+  });
+
+  // Typography Live Preview and Live Background Updates
+  function updateLiveTypography() {
+    if ($("eventFontSize")) document.body.dataset.eventSize = $("eventFontSize").value;
+    if ($("eventAlign")) document.body.dataset.eventAlign = $("eventAlign").value;
+    if ($("eventFontFamily")) document.body.dataset.eventFont = $("eventFontFamily").value;
+    if ($("eventFontWeight")) document.body.dataset.eventWeight = $("eventFontWeight").value;
+  }
+
+  ["eventFontSize", "eventAlign", "eventFontFamily", "eventFontWeight"].forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener("change", updateLiveTypography);
   });
 
   // Quick theme switcher button in header

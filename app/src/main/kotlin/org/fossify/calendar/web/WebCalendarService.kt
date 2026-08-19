@@ -190,6 +190,10 @@ private class CalendarHttpServer(
             put("weekAgendaLayout", config.wallWeekAgendaLayout)
             put("timeGridStart", config.wallTimeGridStart)
             put("timeGridEnd", config.wallTimeGridEnd)
+            put("eventFontSize", config.wallEventFontSize)
+            put("eventAlign", config.wallEventAlign)
+            put("eventFontFamily", config.wallEventFontFamily)
+            put("eventFontWeight", config.wallEventFontWeight)
             put("weatherZip", config.weatherZip)
             put("weatherLabel", config.weatherLabel)
             put("port", WebCalendarService.PORT)
@@ -277,6 +281,30 @@ private class CalendarHttpServer(
             }
             config.wallTimeGridStart = start
             config.wallTimeGridEnd = end
+        }
+        if (body.has("eventFontSize")) {
+            val size = body.optString("eventFontSize").lowercase()
+            if (size in setOf("compact", "normal", "large", "xlarge", "huge")) {
+                config.wallEventFontSize = size
+            }
+        }
+        if (body.has("eventAlign")) {
+            val align = body.optString("eventAlign").lowercase()
+            if (align in setOf("top", "center")) {
+                config.wallEventAlign = align
+            }
+        }
+        if (body.has("eventFontFamily")) {
+            val font = body.optString("eventFontFamily").lowercase()
+            if (font in setOf("plus-jakarta", "outfit", "inter", "lexend", "roboto", "space-grotesk", "system")) {
+                config.wallEventFontFamily = font
+            }
+        }
+        if (body.has("eventFontWeight")) {
+            val weight = body.optString("eventFontWeight").lowercase()
+            if (weight in setOf("normal", "medium", "semibold", "bold")) {
+                config.wallEventFontWeight = weight
+            }
         }
         if (body.has("weatherZip")) config.weatherZip = cleanText(body.optString("weatherZip"), 16)
         if (body.has("weatherLabel")) config.weatherLabel = cleanText(body.optString("weatherLabel"), 120)

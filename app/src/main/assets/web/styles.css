@@ -51,6 +51,78 @@ body[data-shape="sharp"] {
 }
 
 /* ==========================================================================
+   IN-CALENDAR TYPOGRAPHY & APPOINTMENT CUSTOMIZATION
+   ========================================================================== */
+body[data-event-font="plus-jakarta"], body:not([data-event-font]) {
+  --event-font: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+body[data-event-font="outfit"] {
+  --event-font: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+body[data-event-font="inter"] {
+  --event-font: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+body[data-event-font="lexend"] {
+  --event-font: "Lexend", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+body[data-event-font="roboto"] {
+  --event-font: "Roboto", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+body[data-event-font="space-grotesk"] {
+  --event-font: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+body[data-event-font="system"] {
+  --event-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* FONT WEIGHT PROFILES (data-event-weight) */
+body[data-event-weight="normal"] {
+  --event-title-weight: 400;
+  --event-meta-weight: 400;
+}
+body[data-event-weight="medium"] {
+  --event-title-weight: 500;
+  --event-meta-weight: 450;
+}
+body[data-event-weight="semibold"], body:not([data-event-weight]) {
+  --event-title-weight: 600;
+  --event-meta-weight: 450;
+}
+body[data-event-weight="bold"] {
+  --event-title-weight: 750;
+  --event-meta-weight: 550;
+}
+
+/* TEXT SIZE SCALING (data-event-size) */
+body[data-event-size="compact"] {
+  --event-size-scale: 0.88;
+}
+body[data-event-size="normal"], body:not([data-event-size]) {
+  --event-size-scale: 1.0;
+}
+body[data-event-size="large"] {
+  --event-size-scale: 1.15;
+}
+body[data-event-size="xlarge"] {
+  --event-size-scale: 1.30;
+}
+body[data-event-size="huge"] {
+  --event-size-scale: 1.45;
+}
+
+/* APPOINTMENT CONTENT ALIGNMENT (data-event-align) */
+body[data-event-align="top"], body:not([data-event-align]) {
+  --event-align-justify: flex-start;
+  --event-align-items: flex-start;
+  --event-text-align: left;
+}
+body[data-event-align="center"] {
+  --event-align-justify: center;
+  --event-align-items: center;
+  --event-text-align: center;
+}
+
+/* ==========================================================================
    THEME PALETTES (data-theme & data-mode)
    ========================================================================== */
 
@@ -779,6 +851,8 @@ h2 {
 .event-chip {
   display: flex;
   flex-direction: column;
+  justify-content: var(--event-align-justify, flex-start);
+  align-items: var(--event-align-items, flex-start);
   width: 100%;
   overflow: hidden;
   padding: 3px 6px;
@@ -787,7 +861,8 @@ h2 {
   border-radius: var(--chip-radius);
   background: var(--panel-card);
   color: var(--text);
-  text-align: left;
+  font-family: var(--event-font, var(--font-sans));
+  text-align: var(--event-text-align, left);
   box-shadow: var(--shadow-sm);
   transition: var(--transition-fast);
 }
@@ -800,20 +875,28 @@ h2 {
 
 .event-chip .event-title {
   display: block;
+  width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.86rem;
-  font-weight: 550;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  font-family: var(--event-font, var(--font-sans));
+  font-size: calc(0.88rem * var(--event-size-scale, 1));
+  font-weight: var(--event-title-weight, 600);
   line-height: 1.2;
 }
 
 .event-chip .event-time {
   display: block;
+  width: 100%;
   color: var(--text-muted);
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
   margin-top: 1px;
-  font-size: 0.72rem;
-  font-weight: 450;
+  font-family: var(--event-font, var(--font-sans));
+  font-size: calc(0.74rem * var(--event-size-scale, 1));
+  font-weight: var(--event-meta-weight, 450);
   line-height: 1.15;
 }
 
@@ -1113,17 +1196,22 @@ h2 {
   width: 100%;
   min-height: 24px;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: var(--event-align-justify, flex-start);
   padding: 2px 6px;
   border: 0;
   border-left: 3px solid var(--event-color, var(--accent));
   border-radius: var(--chip-radius);
   background: var(--panel-card);
   color: var(--text);
-  font-size: 0.78rem;
-  font-weight: 550;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-family: var(--event-font, var(--font-sans));
+  font-size: calc(0.80rem * var(--event-size-scale, 1));
+  font-weight: var(--event-title-weight, 550);
+  text-align: var(--event-text-align, left);
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
   box-shadow: var(--shadow-sm);
 }
 
@@ -1147,13 +1235,18 @@ h2 {
   height: var(--event-height);
   min-height: 24px;
   overflow: hidden;
-  padding: 3px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: var(--event-align-justify, flex-start);
+  align-items: var(--event-align-items, flex-start);
+  padding: 2px 5px;
   border: 0;
   border-left: 3px solid var(--event-color, var(--accent));
   border-radius: var(--chip-radius);
   background: var(--panel-card);
   color: var(--text);
-  text-align: left;
+  font-family: var(--event-font, var(--font-sans));
+  text-align: var(--event-text-align, left);
   box-shadow: var(--shadow-md);
   transition: var(--transition-fast);
   z-index: 2;
@@ -1167,23 +1260,30 @@ h2 {
 
 .time-grid-event-title, .time-grid-event-time, .time-grid-event-location {
   display: block;
+  width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  font-family: var(--event-font, var(--font-sans));
 }
 
 .time-grid-event-title {
-  font-size: 0.86rem;
-  font-weight: 550;
-  line-height: 1.2;
+  font-size: calc(0.88rem * var(--event-size-scale, 1));
+  font-weight: var(--event-title-weight, 600);
+  line-height: 1.15;
 }
 
 .time-grid-event-time, .time-grid-event-location {
   margin-top: 1px;
   color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 450;
+  font-size: calc(0.74rem * var(--event-size-scale, 1));
+  font-weight: var(--event-meta-weight, 450);
   line-height: 1.15;
+}
+
+.time-grid-event-location {
+  font-size: calc(0.72rem * var(--event-size-scale, 1));
 }
 
 /* ==========================================================================
@@ -1217,7 +1317,7 @@ h2 {
 
 .agenda-event {
   display: flex;
-  align-items: flex-start;
+  align-items: var(--event-align-items, flex-start);
   gap: 12px;
   width: 100%;
   padding: 10px 14px;
@@ -1226,7 +1326,8 @@ h2 {
   border-left: 4px solid var(--event-color, var(--accent));
   border-radius: var(--radius-md);
   background: var(--panel-card);
-  text-align: left;
+  font-family: var(--event-font, var(--font-sans));
+  text-align: var(--event-text-align, left);
   box-shadow: var(--shadow-sm);
   transition: var(--transition-smooth);
 }
@@ -1240,22 +1341,33 @@ h2 {
 .agenda-event-time {
   min-width: 84px;
   color: var(--text-muted);
-  font-size: 0.84rem;
-  font-weight: 500;
+  font-family: var(--event-font, var(--font-sans));
+  font-size: calc(0.85rem * var(--event-size-scale, 1));
+  font-weight: var(--event-meta-weight, 500);
   font-variant-numeric: tabular-nums;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .agenda-event-title {
-  font-size: 0.98rem;
-  font-weight: 550;
+  font-family: var(--event-font, var(--font-sans));
+  font-size: calc(1.00rem * var(--event-size-scale, 1));
+  font-weight: var(--event-title-weight, 600);
   color: var(--text);
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .agenda-event-meta {
   color: var(--text-muted);
   margin-top: 2px;
-  font-size: 0.82rem;
+  font-family: var(--event-font, var(--font-sans));
+  font-size: calc(0.84rem * var(--event-size-scale, 1));
   font-weight: 400;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* ==========================================================================
@@ -2039,6 +2151,155 @@ input:checked + .custom-switch::after {
 
 .settings-footnote a:hover {
   text-decoration: underline;
+}
+
+/* ==========================================================================
+   SETTINGS TABBED INTERFACE & TYPOGRAPHY PREVIEW
+   ========================================================================== */
+.settings-tabs-nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 14px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.settings-tabs-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.settings-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 0.84rem;
+  font-weight: 650;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background: var(--panel-card);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.settings-tab-btn:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+  background: var(--panel-card-hover);
+}
+
+.settings-tab-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.settings-tab-content {
+  min-height: 360px;
+}
+
+.settings-tab-panel {
+  display: none;
+}
+
+.settings-tab-panel.active {
+  display: grid;
+  gap: 16px;
+  animation: tabFadeIn 0.18s ease-out;
+}
+
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* TYPOGRAPHY PREVIEW CONTAINER */
+.typography-preview-container {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--panel-solid);
+}
+
+.typography-preview-label {
+  font-size: 0.74rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.typography-preview-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: var(--event-align-justify, flex-start);
+  align-items: var(--event-align-items, flex-start);
+  width: 100%;
+  padding: 6px 10px;
+  border-left: 4px solid var(--event-color, var(--accent));
+  border-radius: var(--chip-radius);
+  background: var(--panel-card);
+  color: var(--text);
+  font-family: var(--event-font, var(--font-sans));
+  text-align: var(--event-text-align, left);
+  box-shadow: var(--shadow-sm);
+}
+
+.typography-preview-card .preview-event-title {
+  display: block;
+  width: 100%;
+  font-family: var(--event-font, var(--font-sans));
+  font-size: calc(0.90rem * var(--event-size-scale, 1));
+  font-weight: var(--event-title-weight, 600);
+  line-height: 1.2;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.typography-preview-card .preview-event-time {
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-family: var(--event-font, var(--font-sans));
+  font-size: calc(0.74rem * var(--event-size-scale, 1));
+  font-weight: var(--event-meta-weight, 450);
+  line-height: 1.15;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.typography-preview-card .preview-event-location {
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-family: var(--event-font, var(--font-sans));
+  font-size: calc(0.72rem * var(--event-size-scale, 1));
+  font-weight: var(--event-meta-weight, 450);
+  line-height: 1.15;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.danger-subtle {
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.danger-subtle:hover {
+  background: var(--danger);
+  color: #ffffff;
+  border-color: var(--danger);
 }
 
 /* ==========================================================================

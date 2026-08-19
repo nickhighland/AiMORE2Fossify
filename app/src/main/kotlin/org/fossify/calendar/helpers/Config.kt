@@ -86,6 +86,22 @@ class Config(context: Context) : BaseConfig(context) {
         get() = prefs.getInt(WALL_TIME_GRID_END, 22).coerceIn(1, 24)
         set(hour) = prefs.edit().putInt(WALL_TIME_GRID_END, hour.coerceIn(1, 24)).apply()
 
+    var wallEventFontSize: String
+        get() = prefs.getString(WALL_EVENT_FONT_SIZE, "normal") ?: "normal"
+        set(size) = prefs.edit().putString(WALL_EVENT_FONT_SIZE, size).apply()
+
+    var wallEventAlign: String
+        get() = prefs.getString(WALL_EVENT_ALIGN, "top") ?: "top"
+        set(align) = prefs.edit().putString(WALL_EVENT_ALIGN, align).apply()
+
+    var wallEventFontFamily: String
+        get() = prefs.getString(WALL_EVENT_FONT_FAMILY, "plus-jakarta") ?: "plus-jakarta"
+        set(font) = prefs.edit().putString(WALL_EVENT_FONT_FAMILY, font).apply()
+
+    var wallEventFontWeight: String
+        get() = prefs.getString(WALL_EVENT_FONT_WEIGHT, "semibold") ?: "semibold"
+        set(weight) = prefs.edit().putString(WALL_EVENT_FONT_WEIGHT, weight).apply()
+
     var weatherZip: String
         get() = prefs.getString(WEATHER_ZIP, "") ?: ""
         set(zip) = prefs.edit().putString(WEATHER_ZIP, zip).apply()
