@@ -1,6 +1,6 @@
 # AiMORE2Fossify setup
 
-AiMORE2Fossify is a customized Fossify Calendar for AiMOR digital calendars. It adds a wall-calendar mode, a weather widget, and a local web interface that can be opened from a phone or computer on the same LAN to manage calendars more easily. The web interface supports multiple calendars, ICS imports and one-way feeds, calendar colors, event editing where permitted, and wall-display settings.
+AiMORE2Fossify is a customized Fossify Calendar for AiMOR digital calendars. It adds a wall-calendar mode, a weather widget, and a local web interface that can be opened from a phone or computer on the same LAN to manage calendars more easily. The web interface supports multiple calendars, ICS imports with incoming-only or two-way choices, calendar colors, event editing where permitted, and wall-display settings.
 
 The project does not require root, an unlocked bootloader, firmware changes, Google Play Services, or a cloud account for the LAN interface.
 

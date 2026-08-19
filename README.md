@@ -5,7 +5,7 @@ I was given an AiMOR Digital Calendar.  It was a great concept with poor executi
 AiMORE2Fossify is a customized Fossify Calendar build for AiMOR Android digital calendars. It boots into a full-screen wall calendar and adds:
 
 - A local LAN web interface on port 8080 for managing the calendar from a phone or computer.
-- Multiple calendars with colors, deletion, visibility controls, editable local calendars, read-only imports, and one-way ICS feeds.
++ Multiple calendars with colors, deletion, visibility controls, incoming-only or two-way calendar choices, and outgoing-event protection.
 - Automatic ICS refreshes at least every 15 minutes.
 - Month, month + day, week, and agenda views, including a selectable startup view.
 - Previous/next arrows move by month, week, or day according to the active view; event text is sized for wall readability.
@@ -80,7 +80,7 @@ http://192.168.4.80:8080
 
 The web Settings menu controls startup mode, default view, orientation, brightness, week start, Local-calendar visibility, weather ZIP code, weather label, and the Week/Agenda layout. Selecting Hourly time grid exposes start/end hour controls; Week shows seven timed columns and Agenda shows a single-day timed schedule. The native wall app keeps the weather card pinned to the bottom of the right-hand column in either orientation; a long calendar list scrolls without covering or moving it. The LAN web interface omits the weather card and keeps its source attribution in the Settings footnote.
 
-ICS files can be imported as editable local copies or read-only snapshots. HTTP(S) ICS feeds are one-way incoming calendars and refresh at least every 15 minutes. Read-only calendars cannot be edited or deleted from the web interface.
+ICS sources can be added as two-way (incoming + outgoing edits), one-way (incoming only), or read-only snapshots. The New event button is shown only when at least one visible calendar allows outgoing changes. HTTP(S) feeds refresh at least every 15 minutes. Read-only calendars cannot be edited or deleted from the web interface.
 
 The LAN interface is intentionally unauthenticated and local-only. Do not forward port 8080 outside a trusted network.
 

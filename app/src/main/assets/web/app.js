@@ -315,7 +315,7 @@
     $("agendaView").classList.toggle("hidden", state.view !== "agenda");
     
     renderCalendars();
-    $("newEvent").classList.toggle("hidden", !state.calendars.some((calendar) => calendar.visible && !calendar.synced && !calendar.readOnly));
+    $("newEvent").classList.toggle("hidden", !state.calendars.some((calendar) => calendar.visible && calendar.outgoingEnabled !== false && !calendar.synced && !calendar.readOnly));
     renderWeather();
     
     if (state.view === "month") renderMonth();
@@ -525,8 +525,11 @@
   }
 
   function calendarBadge(calendar) {
-    if (calendar.syncMode === "ics_url") return `<span class="calendar-badge">${calendar.readOnly ? "One-way" : "ICS"}</span>`;
-    if (calendar.syncMode === "ics_file") return `<span class="calendar-badge">${calendar.readOnly ? "Read-only" : "Imported"}</span>`;
+    if (calendar.syncMode === "ics_url" || calendar.syncMode === "ics_file") {
+      const label = calendar.readOnly ? (calendar.syncMode === "ics_url" ? "One-way" : "Read-only") : "Two-way";
+      const next = calendar.readOnly ? "two_way" : "incoming";
+      return `<span class="calendar-badge calendar-direction-toggle" role="button" tabindex="0" data-calendar-direction-id="${calendar.id}" data-next-direction="${next}" title="Switch to ${next === "two_way" ? "two-way" : "incoming-only"} sync">${label}</span>`;
+    }
     if (calendar.readOnly) return `<span class="calendar-badge">Read-only</span>`;
     return "";
   }
@@ -585,6 +588,24 @@
       } finally {
         button.disabled = false;
         button.classList.remove("spinning");
+      }
+    }));
+
+    $("calendarList").querySelectorAll("[data-calendar-direction-id]").forEach((button) => button.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      button.disabled = true;
+      try {
+        await api(`/api/calendars/${button.dataset.calendarDirectionId}`, { method: "PUT", body: JSON.stringify({ syncDirection: button.dataset.nextDirection }) });
+        await load();
+      } catch (error) {
+        setStatus(error.message, true);
+        button.disabled = false;
+      }
+    }));
+    $("calendarList").querySelectorAll("[data-calendar-direction-id]").forEach((button) => button.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        button.click();
       }
     }));
     
@@ -667,7 +688,7 @@
   }
 
   function openNewEvent(date = state.date) {
-    const editable = state.calendars.filter((item) => item.visible && !item.synced && !item.readOnly);
+    const editable = state.calendars.filter((item) => item.visible && item.outgoingEnabled !== false && !item.synced && !item.readOnly);
     if (!editable.length) {
       setStatus("Add or enable an editable calendar before creating events.", true);
       return;
@@ -787,7 +808,7 @@
     renderSourceColorPalette();
     $("sourceFile").value = "";
     $("sourceUrl").value = "";
-    $("sourceMode").value = focusFile ? "readonly" : "editable";
+    $("sourceMode").value = focusFile ? "readonly" : "two_way";
     $("calendarError").textContent = "";
     $("calendarDialog").showModal();
     if (focusFile) setTimeout(() => $("sourceFile").focus(), 0);
@@ -869,8 +890,8 @@
     const url = $("sourceUrl").value.trim();
     const title = $("sourceTitle").value.trim() || "New calendar";
     if (!file && !url) {
-      if ($("sourceMode").value !== "editable") {
-        $("calendarError").textContent = "Choose an .ics file or enter an ICS feed URL, or select Editable local copy.";
+      if ($("sourceMode").value !== "two_way") {
+        $("calendarError").textContent = "Choose an .ics file or enter an ICS feed URL, or select Two-way (incoming + outgoing).";
         return;
       }
       try {

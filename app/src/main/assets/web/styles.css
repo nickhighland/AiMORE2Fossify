@@ -1386,6 +1386,53 @@ h2 {
   box-sizing: border-box;
 }
 
+/* The native wall is a fixed viewport, not a scrolling LAN page. Let the
+   flex layout calculate the space below the variable-height top bar so the
+   weather card always ends at the visible bottom edge. */
+body.native-wall {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+}
+
+body.native-wall .topbar {
+  flex: 0 0 auto;
+}
+
+body.native-wall .page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  height: auto;
+  padding-bottom: 20px;
+}
+
+body.native-wall .status {
+  flex: 0 0 auto;
+}
+
+body.native-wall .layout {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-items: stretch;
+}
+
+body.native-wall .calendar-panel {
+  min-height: 0;
+  overflow: auto;
+}
+
+body.native-wall .side-panel {
+  position: relative;
+  top: auto;
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+}
+
 .side-heading {
   display: flex;
   align-items: center;
@@ -1550,6 +1597,17 @@ h2 {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.calendar-direction-toggle {
+  cursor: pointer;
+  font: inherit;
+}
+
+.calendar-direction-toggle:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--panel-hover);
 }
 
 .calendar-sync {

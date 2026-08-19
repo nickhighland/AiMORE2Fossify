@@ -427,14 +427,19 @@ private class CalendarHttpServer(
                 ?: session.parameters["mode"]?.firstOrNull()
                 ?: "readonly"
             ).lowercase()
-        require(mode in setOf("editable", "readonly", "one_way")) {
-            "mode must be editable, readonly, or one_way"
+        require(mode in setOf("two_way", "two-way", "editable", "readonly", "one_way", "incoming")) {
+            "mode must be two_way, readonly, or one_way"
+        }
+        val normalizedMode = when (mode) {
+            "two-way", "editable" -> "two_way"
+            "incoming" -> "one_way"
+            else -> mode
         }
         val url = body?.optString("url")?.takeIf { it.isNotBlank() }
             ?: session.parameters["url"]?.firstOrNull()?.takeIf { it.isNotBlank() }
         val filePath = files["file"] ?: files.values.firstOrNull()
         require(url != null || (multipart && filePath != null)) { "Provide an ICS file or URL" }
-        require(mode != "one_way" || url != null) { "one_way mode requires an ICS URL" }
+        require(normalizedMode != "one_way" || url != null) { "one_way mode requires an ICS URL" }
 
         val syncMode = if (url != null) WEB_SYNC_ICS_URL else WEB_SYNC_ICS_FILE
         val calendar = CalendarEntity(
@@ -443,7 +448,7 @@ private class CalendarHttpServer(
             color = parseColor(body?.optString("color", "#4f7cff") ?: "#4f7cff"),
             webSyncMode = syncMode,
             webSyncUrl = url.orEmpty(),
-            webReadOnly = mode != "editable"
+            webReadOnly = normalizedMode == "one_way" || normalizedMode == "readonly"
         )
         calendar.id = appContext.eventsHelper.insertOrUpdateCalendarSync(calendar)
         try {
@@ -481,9 +486,26 @@ private class CalendarHttpServer(
         val body = readJson(session)
         val title = cleanText(body.optString("title", existing.title), 120)
         require(title.isNotBlank()) { "title is required" }
+        val requestedDirection = when {
+            body.has("syncDirection") -> body.optString("syncDirection").lowercase()
+            body.has("outgoingEnabled") -> if (body.optBoolean("outgoingEnabled")) "two_way" else "incoming"
+            else -> null
+        }
+        require(requestedDirection == null || requestedDirection in setOf("incoming", "one_way", "two_way", "two-way")) {
+            "syncDirection must be incoming or two_way"
+        }
+        require(existing.webSyncMode != WEB_SYNC_LOCAL || requestedDirection != "incoming") {
+            "The Local calendar must allow outgoing changes"
+        }
+        val outgoingEnabled = when (requestedDirection) {
+            "two_way", "two-way" -> true
+            "incoming", "one_way" -> false
+            else -> !existing.webReadOnly
+        }
         val updated = existing.copy(
             title = title,
-            color = if (body.has("color")) parseColor(body.optString("color")) else existing.color
+            color = if (body.has("color")) parseColor(body.optString("color")) else existing.color,
+            webReadOnly = !outgoingEnabled
         )
         appContext.eventsHelper.insertOrUpdateCalendarSync(updated)
         if (body.has("visible")) {
@@ -693,7 +715,10 @@ private class CalendarHttpServer(
         put("syncMode", webSyncMode)
         put("syncUrl", webSyncUrl)
         put("syncIntervalMinutes", webSyncIntervalMinutes)
-        put("readOnly", webReadOnly || isSyncedCalendar())
+        val incomingOnly = webReadOnly || isSyncedCalendar()
+        put("readOnly", incomingOnly)
+        put("syncDirection", if (incomingOnly) "incoming" else "two_way")
+        put("outgoingEnabled", !incomingOnly)
         put("lastSync", webSyncLastUpdated)
         put("lastSyncError", webSyncLastError)
     }

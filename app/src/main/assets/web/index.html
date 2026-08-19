@@ -420,7 +420,7 @@
         <button type="button" id="closeCalendar" class="close-button" aria-label="Close">×</button>
       </div>
       <div class="source-section">
-        <p class="source-help">Import an .ics file as an editable local copy, a read-only snapshot, or connect a one-way incoming ICS URL.</p>
+        <p class="source-help">Choose whether this calendar accepts incoming events only or allows incoming and outgoing event changes.</p>
         <label class="form-field">
           <span class="field-label">Calendar name</span>
           <input id="sourceTitle" maxlength="120" placeholder="e.g. School holidays">
@@ -446,9 +446,9 @@
         <label class="form-field">
           <span class="field-label">Permission</span>
           <select id="sourceMode">
-            <option value="editable">Editable local copy</option>
+            <option value="two_way">Two-way (incoming + outgoing)</option>
             <option value="readonly">Read-only snapshot</option>
-            <option value="one_way">One-way incoming sync</option>
+            <option value="one_way">One-way (incoming only)</option>
           </select>
         </label>
         <div id="calendarError" class="form-error" role="alert"></div>

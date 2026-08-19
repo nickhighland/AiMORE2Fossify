@@ -13,7 +13,11 @@ import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
 
-/** Downloads and imports one-way ICS feeds using Fossify's existing ICS parser. */
+/** Downloads and imports ICS feeds using Fossify's existing parser.
+ *
+ * Incoming-only calendars are replaced on refresh. Two-way calendars retain
+ * locally created outgoing events while incoming events are merged by UID.
+ */
 object IcsCalendarSync {
     private const val MAX_FEED_BYTES = 10L * 1024L * 1024L
 
@@ -50,7 +54,7 @@ object IcsCalendarSync {
 
     private fun importIntoCalendar(context: Context, calendar: CalendarEntity, file: File) {
         val existingIds = context.eventsDB.getEventAndTasksIdsByCalendar(calendar.id!!).toMutableList()
-        if (existingIds.isNotEmpty()) {
+        if (calendar.webReadOnly && existingIds.isNotEmpty()) {
             context.eventsHelper.deleteEvents(
                 existingIds,
                 deleteFromCalDAV = false,
