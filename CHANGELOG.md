@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed stuck zoom level in weekly view on some devices ([#621])
 - Long title, location fields now wrap in task/event editors ([#1177])
 
+## [1.10.20] - 2026-09-02
+### Changed
+- Reduced wall-calendar polling to once per minute while preserving 15-minute ICS synchronization.
+
+### Fixed
+- Prevented overlapping wall refresh requests and added request timeouts so stalled network calls cannot accumulate in the WebView.
+- Added periodic WebView cleanup and daily wall-mode recreation to bound renderer resource use during long-running display sessions.
+
 ## [1.10.3] - 2026-02-14
 ### Changed
 - Updated translations

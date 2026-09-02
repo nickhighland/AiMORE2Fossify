@@ -23,6 +23,7 @@ import org.fossify.calendar.helpers.WEB_SYNC_LOCAL
 import org.fossify.calendar.helpers.getNowSeconds
 import org.fossify.calendar.models.CalendarEntity
 import org.fossify.calendar.models.Event
+import org.fossify.calendar.receivers.WallRefreshReceiver
 import org.fossify.calendar.updates.UpdateManager
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.joda.time.DateTime
@@ -318,6 +319,7 @@ private class CalendarHttpServer(
 
     private fun exitWallMode(): Response {
         appContext.config.wallStartMode = false
+        WallRefreshReceiver.cancel(appContext)
         appContext.startActivity(
             Intent(appContext, MainActivity::class.java).addFlags(
                 Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP

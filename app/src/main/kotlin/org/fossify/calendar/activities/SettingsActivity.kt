@@ -68,6 +68,7 @@ import org.fossify.calendar.helpers.WEEKLY_VIEW
 import org.fossify.calendar.helpers.WEEK_NUMBERS
 import org.fossify.calendar.helpers.YEARLY_VIEW
 import org.fossify.calendar.models.CalendarEntity
+import org.fossify.calendar.receivers.WallRefreshReceiver
 import org.fossify.calendar.updates.UpdateManager
 import org.fossify.calendar.web.WebCalendarService
 import org.fossify.commons.dialogs.ColorPickerDialog
@@ -355,6 +356,8 @@ class SettingsActivity : SimpleActivity() {
         settingsWallStartModeHolder.setOnClickListener {
             settingsWallStartMode.toggle()
             config.wallStartMode = settingsWallStartMode.isChecked
+            if (config.wallStartMode) WallRefreshReceiver.schedule(this@SettingsActivity)
+            else WallRefreshReceiver.cancel(this@SettingsActivity)
         }
 
         val addresses = WebCalendarService.lanAddresses()
@@ -368,6 +371,7 @@ class SettingsActivity : SimpleActivity() {
         }
         settingsWallOpenModeHolder.setOnClickListener {
             config.wallStartMode = true
+            WallRefreshReceiver.schedule(this@SettingsActivity)
             startActivity(Intent(this@SettingsActivity, WallCalendarActivity::class.java))
         }
         settingsWallAddressHolder.setOnClickListener {

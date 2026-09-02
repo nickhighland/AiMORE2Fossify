@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -15,6 +16,7 @@ import android.webkit.WebViewClient
 import android.webkit.ValueCallback
 import android.widget.FrameLayout
 import org.fossify.calendar.extensions.config
+import org.fossify.calendar.receivers.WallRefreshReceiver
 import org.fossify.calendar.web.WebCalendarService
 import org.json.JSONObject
 import java.util.Calendar
@@ -29,10 +31,16 @@ class WallCalendarActivity : SimpleActivity() {
     private var fileChooserCallback: ValueCallback<Array<Uri>>? = null
     private var hasLoadedWall = false
     private var hasResumedOnce = false
+    private var reloadScheduled = false
+    private val reloadRunnable = Runnable {
+        reloadScheduled = false
+        if (!isFinishing && !isDestroyed && ::webView.isInitialized) webView.reload()
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (config.wallStartMode) WallRefreshReceiver.schedule(this) else WallRefreshReceiver.cancel(this)
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         enterImmersiveMode()
 
@@ -54,7 +62,10 @@ class WallCalendarActivity : SimpleActivity() {
                     error: android.webkit.WebResourceError
                 ) {
                     super.onReceivedError(view, request, error)
-                    if (request.isForMainFrame) view.postDelayed({ view.reload() }, 1000L)
+                    if (request.isForMainFrame && !reloadScheduled) {
+                        reloadScheduled = true
+                        view.postDelayed(reloadRunnable, 1000L)
+                    }
                 }
             }
             webChromeClient = object : WebChromeClient() {
@@ -111,6 +122,14 @@ class WallCalendarActivity : SimpleActivity() {
         applyWallSettings()
         if (hasResumedOnce && ::webView.isInitialized && hasLoadedWall) webView.reload()
         hasResumedOnce = true
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.action == WallRefreshReceiver.ACTION_REFRESH && !isFinishing) {
+            setIntent(intent)
+            recreate()
+        }
     }
 
     private fun applyWallSettings() {
@@ -174,7 +193,13 @@ class WallCalendarActivity : SimpleActivity() {
         fileChooserCallback?.onReceiveValue(null)
         fileChooserCallback = null
         if (::webView.isInitialized) {
+            webView.removeCallbacks(reloadRunnable)
+            reloadScheduled = false
             webView.stopLoading()
+            webView.loadUrl("about:blank")
+            webView.clearHistory()
+            webView.removeAllViews()
+            (webView.parent as? ViewGroup)?.removeView(webView)
             webView.destroy()
         }
         super.onDestroy()

@@ -133,10 +133,23 @@
   async function api(path, options = {}) {
     const isFormData = options.body instanceof FormData;
     const headers = isFormData ? {} : { "Content-Type": "application/json" };
-    const response = await fetch(path, { ...options, headers: { ...headers, ...(options.headers || {}) } });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(body.error || `Request failed (${response.status})`);
-    return body;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    try {
+      const response = await fetch(path, {
+        ...options,
+        signal: controller.signal,
+        headers: { ...headers, ...(options.headers || {}) }
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || `Request failed (${response.status})`);
+      return body;
+    } catch (error) {
+      if (error?.name === "AbortError") throw new Error("Request timed out. Retrying…");
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   function effectiveMode(settings = state.settings) {
@@ -244,36 +257,63 @@
     return { start, end };
   }
 
-  async function load() {
-    const loadId = ++state.loadId;
-    try {
-      const settings = await api("/api/settings");
-      if (loadId !== state.loadId) return;
-      state.settings = { ...state.settings, ...(settings || {}) };
-      if (!state.defaultViewApplied) {
-        state.view = isWallView(state.settings.defaultView) ? normalizeView(state.settings.defaultView) : "month";
-        state.defaultViewApplied = true;
-      }
-      const requestedDate = new Date(state.date);
-      const requestedView = state.view;
-      const requestedSettings = { ...state.settings };
-      const range = rangeForView(requestedDate, requestedView, requestedSettings);
-      const [calendars, events, status, weather] = await Promise.all([
-        api("/api/calendars"),
-        api(`/api/events?start=${toSeconds(range.start)}&end=${toSeconds(range.end)}`),
-        api("/api/status"),
-        api("/api/weather")
-      ]);
-      if (loadId !== state.loadId) return;
-      state.calendars = calendars.calendars || [];
-      state.events = events.events || [];
-      state.weather = weather || null;
-      applyWallSettings(state.settings);
-      render(status);
-    } catch (error) {
-      if (loadId !== state.loadId) return;
-      setStatus(error.message, true);
+  let activeLoad = null;
+  let loadRequested = false;
+
+  // Keep only one refresh in flight. A stalled weather/events request must not
+  // cause another batch of requests every polling interval and steadily grow
+  // the WebView's renderer workload.
+  function load() {
+    if (activeLoad) {
+      loadRequested = true;
+      return activeLoad;
     }
+
+    const loadId = ++state.loadId;
+    activeLoad = (async () => {
+      try {
+        const settings = await api("/api/settings");
+        if (loadId !== state.loadId) return;
+        state.settings = { ...state.settings, ...(settings || {}) };
+        if (!state.defaultViewApplied) {
+          state.view = isWallView(state.settings.defaultView) ? normalizeView(state.settings.defaultView) : "month";
+          state.defaultViewApplied = true;
+        }
+        const requestedDate = new Date(state.date);
+        const requestedView = state.view;
+        const requestedSettings = { ...state.settings };
+        const range = rangeForView(requestedDate, requestedView, requestedSettings);
+        const [calendars, events, status, weather] = await Promise.all([
+          api("/api/calendars"),
+          api(`/api/events?start=${toSeconds(range.start)}&end=${toSeconds(range.end)}`),
+          api("/api/status"),
+          api("/api/weather")
+        ]);
+        if (loadId !== state.loadId) return;
+        state.calendars = calendars.calendars || [];
+        state.events = events.events || [];
+        state.weather = weather || null;
+        applyWallSettings(state.settings);
+        render(status);
+      } catch (error) {
+        if (loadId === state.loadId) setStatus(error.message, true);
+      }
+    })();
+
+    activeLoad.then(() => {
+      activeLoad = null;
+      if (loadRequested) {
+        loadRequested = false;
+        load();
+      }
+    }, () => {
+      activeLoad = null;
+      if (loadRequested) {
+        loadRequested = false;
+        load();
+      }
+    });
+    return activeLoad;
   }
 
   function updateClock() {
@@ -1057,7 +1097,10 @@
     }
   }, 1000);
   
-  setInterval(load, 15000);
+  // One-minute polling keeps the wall responsive to local edits without
+  // repeatedly rebuilding the calendar for no reason. ICS feeds are synced
+  // independently by WorkManager at their 15-minute minimum cadence.
+  setInterval(load, 60000);
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
   load();
 })();
