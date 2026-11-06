@@ -120,6 +120,12 @@ interface EventsDao {
     @Query("SELECT id FROM events WHERE event_type = :calendarId")
     fun getEventAndTasksIdsByCalendar(calendarId: Long): List<Long>
 
+    @Query("SELECT * FROM events WHERE event_type = :calendarId")
+    fun getEventsOrTasksWithCalendarId(calendarId: Long): List<Event>
+
+    @Query("SELECT * FROM events WHERE event_type = :calendarId AND source = :source")
+    fun getEventsOrTasksWithCalendarIdAndSource(calendarId: Long, source: String): List<Event>
+
     @Query("SELECT id FROM events WHERE event_type IN (:calendarIds)")
     fun getEventAndTasksIdsByCalendar(calendarIds: List<Long>): List<Long>
 

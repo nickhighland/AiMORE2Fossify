@@ -73,12 +73,15 @@ class IcsImporter(private val context: Context, private val errorHandler: ((Exce
         overrideFileCalendars: Boolean,
         eventReminders: ArrayList<Int>? = null,
         loadFromAssets: Boolean = false,
+        onEventSeen: ((String) -> Unit)? = null,
     ): ImportResult {
+        var isCalendarComplete = false
         try {
             val calendars = eventsHelper.getCalendarsSync()
             val existingEvents = context.eventsDB.getEventsOrTasksWithImportIds()
                 .toMutableList() as ArrayList<Event>
             val eventsToInsert = ArrayList<Event>()
+            var isCalendarStarted = false
             var line = ""
 
             val inputStream = if (loadFromAssets) {
@@ -90,6 +93,11 @@ class IcsImporter(private val context: Context, private val errorHandler: ((Exce
             inputStream.bufferedReader().use {
                 while (true) {
                     val curLine = it.readLine() ?: break
+                    if (curLine.trim() == BEGIN_CALENDAR) {
+                        isCalendarStarted = true
+                    } else if (curLine.trim() == END_CALENDAR) {
+                        isCalendarComplete = isCalendarStarted
+                    }
                     if (curLine.trim().isEmpty()) {
                         continue
                     }
@@ -99,7 +107,11 @@ class IcsImporter(private val context: Context, private val errorHandler: ((Exce
                         continue
                     }
 
-                    if (line.trim() == BEGIN_EVENT) {
+                    if (line.trim() == BEGIN_CALENDAR) {
+                        isCalendarStarted = true
+                    } else if (line.trim() == END_CALENDAR) {
+                        isCalendarComplete = isCalendarStarted
+                    } else if (line.trim() == BEGIN_EVENT) {
                         resetValues()
                         curCalendarId = defaultCalendarId
                         isParsingEvent = true
@@ -227,6 +239,15 @@ class IcsImporter(private val context: Context, private val errorHandler: ((Exce
                         tryAddCategories(categories)
                     } else if (line.startsWith(LAST_MODIFIED)) {
                         curLastModified = getTimestamp(line.substring(LAST_MODIFIED.length)) * 1000L
+                    } else if (
+                        line.startsWith(DTSTAMP) &&
+                        curLastModified == 0L &&
+                        (isParsingEvent || isParsingTask)
+                    ) {
+                        // Some feeds, including Google's basic iCal feed, omit LAST-MODIFIED and
+                        // only provide DTSTAMP. Use it as the feed version so changed events are
+                        // not incorrectly treated as unchanged on the next refresh.
+                        curLastModified = getTimestamp(line.substring(DTSTAMP.length)) * 1000L
                     } else if (line.startsWith(EXDATE)) {
                         var value = line.substring(EXDATE.length)
                         if (value.endsWith('}')) {
@@ -282,9 +303,18 @@ class IcsImporter(private val context: Context, private val errorHandler: ((Exce
                             continue
                         }
 
+                        // Keep unchanged events in the feed reconciliation set too. The
+                        // version check below may skip rebuilding an existing event.
+                        if (curImportId.isNotEmpty()) {
+                            onEventSeen?.invoke(curImportId)
+                        }
+
                         // repeating event exceptions can have the same import id as their parents, so pick the latest event to update
                         val eventToUpdate =
-                            existingEvents.filter { curImportId.isNotEmpty() && curImportId == it.importId }
+                            existingEvents.filter {
+                                curImportId.isNotEmpty() && curImportId == it.importId &&
+                                    curCalendarId == it.calendarId && curType == it.type
+                            }
                                 .maxByOrNull { it.lastUpdated }
                         if (eventToUpdate != null && eventToUpdate.lastUpdated >= curLastModified) {
                             eventsAlreadyExist++
@@ -361,6 +391,7 @@ class IcsImporter(private val context: Context, private val errorHandler: ((Exce
 
                         if (event.importId.isEmpty()) {
                             event.importId = event.hashCode().toString()
+                            onEventSeen?.invoke(event.importId)
                             if (existingEvents.map { it.importId }.contains(event.importId)) {
                                 eventsAlreadyExist++
                                 line = curLine
@@ -438,7 +469,7 @@ class IcsImporter(private val context: Context, private val errorHandler: ((Exce
 
         return when {
             eventsImported == 0 -> {
-                if (eventsAlreadyExist > 0) {
+                if (eventsAlreadyExist > 0 || (isCalendarComplete && eventsFailed == 0)) {
                     IMPORT_NOTHING_NEW
                 } else {
                     IMPORT_FAIL
@@ -544,6 +575,7 @@ class IcsImporter(private val context: Context, private val errorHandler: ((Exce
     private fun resetValues() {
         curStart = -1L
         curEnd = -1L
+        curDuration = 0
         curTitle = ""
         curLocation = ""
         curDescription = ""

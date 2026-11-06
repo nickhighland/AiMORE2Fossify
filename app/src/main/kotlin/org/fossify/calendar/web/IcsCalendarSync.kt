@@ -5,6 +5,7 @@ import org.fossify.calendar.extensions.eventsDB
 import org.fossify.calendar.extensions.eventsHelper
 import org.fossify.calendar.extensions.calendarsDB
 import org.fossify.calendar.helpers.IcsImporter
+import org.fossify.calendar.helpers.SOURCE_IMPORTED_ICS
 import org.fossify.calendar.helpers.WEB_SYNC_ICS_URL
 import org.fossify.calendar.helpers.getNowSeconds
 import org.fossify.calendar.models.CalendarEntity
@@ -12,6 +13,7 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
+import java.util.concurrent.ConcurrentHashMap
 
 /** Downloads and imports ICS feeds using Fossify's existing parser.
  *
@@ -20,57 +22,88 @@ import java.net.URL
  */
 object IcsCalendarSync {
     private const val MAX_FEED_BYTES = 10L * 1024L * 1024L
+    private val syncLocks = ConcurrentHashMap<Long, Any>()
 
     fun syncUrl(context: Context, calendarId: Long) {
-        val calendar = context.calendarsDB.getCalendarWithId(calendarId)
-            ?: error("Calendar not found")
-        require(calendar.webSyncMode == WEB_SYNC_ICS_URL && calendar.webSyncUrl.isNotBlank()) {
-            "Calendar is not an ICS URL feed"
-        }
+        withCalendarLock(calendarId) {
+            val calendar = context.calendarsDB.getCalendarWithId(calendarId)
+                ?: error("Calendar not found")
+            require(calendar.webSyncMode == WEB_SYNC_ICS_URL && calendar.webSyncUrl.isNotBlank()) {
+                "Calendar is not an ICS URL feed"
+            }
 
-        val temp = File.createTempFile("wall-calendar-", ".ics", context.cacheDir)
-        try {
-            download(calendar.webSyncUrl, temp)
-            importIntoCalendar(context, calendar, temp)
-            context.eventsHelper.insertOrUpdateCalendarSync(
-                calendar.copy(webSyncLastUpdated = getNowSeconds(), webSyncLastError = "")
-            )
-        } catch (error: Exception) {
-            context.eventsHelper.insertOrUpdateCalendarSync(
-                calendar.copy(webSyncLastError = error.message.orEmpty().take(500))
-            )
-            throw error
-        } finally {
-            temp.delete()
+            val temp = File.createTempFile("wall-calendar-", ".ics", context.cacheDir)
+            try {
+                download(calendar.webSyncUrl, temp)
+                importIntoCalendar(context, calendar, temp)
+                context.eventsHelper.insertOrUpdateCalendarSync(
+                    calendar.copy(webSyncLastUpdated = getNowSeconds(), webSyncLastError = "")
+                )
+            } catch (error: Exception) {
+                context.eventsHelper.insertOrUpdateCalendarSync(
+                    calendar.copy(webSyncLastError = error.message.orEmpty().take(500))
+                )
+                throw error
+            } finally {
+                temp.delete()
+            }
         }
     }
 
     fun importFile(context: Context, calendar: CalendarEntity, file: File) {
-        importIntoCalendar(context, calendar, file)
-        context.eventsHelper.insertOrUpdateCalendarSync(
-            calendar.copy(webSyncLastUpdated = getNowSeconds(), webSyncLastError = "")
-        )
+        withCalendarLock(calendar.id!!) {
+            importIntoCalendar(context, calendar, file)
+            context.eventsHelper.insertOrUpdateCalendarSync(
+                calendar.copy(webSyncLastUpdated = getNowSeconds(), webSyncLastError = "")
+            )
+        }
     }
 
     private fun importIntoCalendar(context: Context, calendar: CalendarEntity, file: File) {
-        val existingIds = context.eventsDB.getEventAndTasksIdsByCalendar(calendar.id!!).toMutableList()
-        if (calendar.webReadOnly && existingIds.isNotEmpty()) {
-            context.eventsHelper.deleteEvents(
-                existingIds,
-                deleteFromCalDAV = false,
-                allowReadOnlyCalendar = true
-            )
-        }
+        val calendarId = calendar.id!!
+        val seenImportIds = HashSet<String>()
 
         val result = IcsImporter(context).importEvents(
             path = file.absolutePath,
-            defaultCalendarId = calendar.id!!,
+            defaultCalendarId = calendarId,
             calDAVCalendarId = 0,
             overrideFileCalendars = true,
             eventReminders = null,
-            loadFromAssets = false
+            loadFromAssets = false,
+            onEventSeen = { importId -> seenImportIds.add(importId) }
         )
         require(result != IcsImporter.ImportResult.IMPORT_FAIL) { "ICS import failed" }
+
+        // A feed-backed calendar must mirror the current snapshot after a complete
+        // import. For two-way calendars, retain locally created events and remove only
+        // stale incoming rows. Incoming-only calendars remove every row not present in
+        // the feed. Reconcile after parsing so a bad/partial feed cannot erase data.
+        if (result != IcsImporter.ImportResult.IMPORT_PARTIAL) {
+            val currentEvents = if (calendar.webReadOnly) {
+                context.eventsDB.getEventsOrTasksWithCalendarId(calendarId)
+            } else {
+                context.eventsDB
+                    .getEventsOrTasksWithCalendarIdAndSource(calendarId, SOURCE_IMPORTED_ICS)
+            }
+            val staleIds = currentEvents
+                .asSequence()
+                .filter { calendar.webReadOnly || it.importId.isNotEmpty() }
+                .filter { it.importId !in seenImportIds }
+                .mapNotNull { it.id }
+                .toMutableList()
+            if (staleIds.isNotEmpty()) {
+                context.eventsHelper.deleteEvents(
+                    staleIds,
+                    deleteFromCalDAV = false,
+                    allowReadOnlyCalendar = true
+                )
+            }
+        }
+    }
+
+    private inline fun <T> withCalendarLock(calendarId: Long, block: () -> T): T {
+        val lock = syncLocks.computeIfAbsent(calendarId) { Any() }
+        return synchronized(lock, block)
     }
 
     private fun download(source: String, destination: File) {

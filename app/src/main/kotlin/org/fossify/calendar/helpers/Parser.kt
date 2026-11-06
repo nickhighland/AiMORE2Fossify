@@ -110,8 +110,8 @@ class Parser {
     }
 
     private fun parseLongFormat(digitString: String, dateTimeZone: DateTimeZone): Long {
-        val dateTimeFormat = DateTimeFormat.forPattern("yyyyMMddHHmmss")
-        return dateTimeFormat.parseDateTime(digitString).withZoneRetainFields(dateTimeZone).seconds()
+        val dateTimeFormat = DateTimeFormat.forPattern("yyyyMMddHHmmss").withZone(dateTimeZone)
+        return dateTimeFormat.parseDateTime(digitString).seconds()
     }
 
     // from Daily, 5x... to RRULE:FREQ=DAILY;COUNT=5
