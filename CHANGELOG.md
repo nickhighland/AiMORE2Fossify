@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed stuck zoom level in weekly view on some devices ([#621])
 - Long title, location fields now wrap in task/event editors ([#1177])
 
+## [1.10.21] - 2026-11-06
+### Fixed
+- Reconciled ICS feed imports so stale incoming appointments are removed without deleting locally created events.
+- Fixed time-zone parsing and serialized concurrent feed refreshes.
+
 ## [1.10.20] - 2026-09-02
 ### Changed
 - Reduced wall-calendar polling to once per minute while preserving 15-minute ICS synchronization.
