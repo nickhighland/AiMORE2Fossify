@@ -1,8 +1,6 @@
 name: No Response
 
 on:
-  schedule:
-    - cron: "0 12 * * *" # Runs daily at noon
   workflow_dispatch:
 
 jobs:
