@@ -1,11 +1,7 @@
 name: Update Fossify Commons
 
 on:
-  repository_dispatch:
-    types: [update-commons]
   workflow_dispatch:
-  schedule:
-    - cron: "0 6 * * 0"
 
 jobs:
   update-commons:
